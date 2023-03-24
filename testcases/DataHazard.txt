@@ -1,0 +1,8 @@
+main:
+    mov r10, #5
+    mov r9, #6
+    str r10, [r9,#0]
+    ldr r1, [r10,#4]
+    add r2, r1, #2
+    mul r3, r1, #2
+    Exit

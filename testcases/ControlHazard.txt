@@ -1,0 +1,14 @@
+main:
+    mov r1, #3
+    mov r3, #2
+l1:
+    sub r1, r1, #1
+    cmp r1, #0
+    bge l1
+    bl  l2
+    mov r2, #3
+    add r2, r2, #5
+    sub r3, r2, #2
+l2:
+    mov r7, r3
+    Exit
