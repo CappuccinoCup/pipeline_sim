@@ -1,7 +1,7 @@
 main:
     mov r0, #6
     bl  fact
-    b   exit
+    b   l2
 fact:
     sub sp, sp, #8
     str lr, [sp, #4]
@@ -21,5 +21,5 @@ l1:
     mov r1, r0
     mul r0, r1, r12
     mov pc, lr
-exit:
+l2:
     Exit

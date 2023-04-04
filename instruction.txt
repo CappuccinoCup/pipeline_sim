@@ -4,11 +4,11 @@ main:
     mov r2, #4
 l1:
     cmp r0, r2
-    bge exit
+    bge l2
     bl  sum
     b   l1
 sum:
     add r0, r0, r1
     mov pc, lr
-exit:
+l2:
     Exit

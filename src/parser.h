@@ -5,6 +5,7 @@
 #include <bits/stdc++.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "arm_instr.h"
 
 using namespace std;

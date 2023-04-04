@@ -453,17 +453,10 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
     vector<symbol> symbol_temps;
 
     while (lex_idx < lexeme.size()) {
-        //cout<<lex_idx<<endl;
-        if (lexeme[lex_idx] == "Add" || lexeme[lex_idx] == "add" || lexeme[lex_idx] == "ADD" ||
-            lexeme[lex_idx] == "Sub" ||
-            lexeme[lex_idx] == "sub" || lexeme[lex_idx] == "SUB" || lexeme[lex_idx] == "Mul" ||
-            lexeme[lex_idx] == "mul" ||
-            lexeme[lex_idx] == "MUL" || lexeme[lex_idx] == "Mov" || lexeme[lex_idx] == "mov" ||
-            lexeme[lex_idx] == "MOV" ||
-            lexeme[lex_idx] == "Ldr" || lexeme[lex_idx] == "ldr" || lexeme[lex_idx] == "LDR" ||
-            lexeme[lex_idx] == "Str" ||
-            lexeme[lex_idx] == "str" || lexeme[lex_idx] == "STR") {
-
+        string lex_lower = lexeme[lex_idx];
+        transform(lex_lower.begin(), lex_lower.end(), lex_lower.begin(), ::tolower);
+        if (lexeme[lex_idx] == "add" || lexeme[lex_idx] == "sub" || lexeme[lex_idx] == "mul" ||
+            lexeme[lex_idx] == "mov" || lexeme[lex_idx] == "ldr" || lexeme[lex_idx] == "str") {
             int p1 = lex_idx;
             int p = execute(lexeme, lex_idx);
             lex_idx = p1;
@@ -845,21 +838,16 @@ int read_instruction(vector<Instruction> &instructions) {
             continue;
         }
 
-        if (isalnum(c) || c == '#' || c == '\'' || c == '(' || c == ')' || c == '*' || c == '.' || c == '=' ||
-            c == '_') {
+        if (isalnum(c) || c == '_' || c == '.' || c == '#' || c == '=') {
             s.append(1, c);
         } else {
-            if (c == ',' || c == ':' || c == ';' || c == '[' || c == ']') {
-                if (s.size() >= 2) {
-                    lexeme.push_back(s);
-                }
-                lexeme.emplace_back(1, c);
-            } else {
-                if (!s.empty()) {
-                    lexeme.push_back(s);
-                }
+            if (!s.empty()) {
+                lexeme.push_back(s);
+                s = "";
             }
-            s = "";
+            if (c == ':' || c == ',' || c == '[' || c == ']') {
+                lexeme.emplace_back(1, c);
+            }
         }
     }
     fin.close();

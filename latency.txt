@@ -1,3 +1,4 @@
+# The number of clock cycles required to execute each instruction
 add = 1;
 sub = 1;
 mul = 5;
