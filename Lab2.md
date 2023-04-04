@@ -1,0 +1,80 @@
+# Architecture Labs: Pipeline - Lab2
+
+### 0. Background
+
+Sometimes we need to take an in-depth look at how an instruction is executed and how it affects the CPU states. Given that ***pipeline*** is widely used in modern CPUs, in Lab2, you will build a pipeline simulator using ***ARM*** instructions as input. Here we go.
+
+### 1. Goal
+
+In this lab, you will finish a pipeline simulator using C++. Instructions are read from a file ("input.txt" below) along with their latency ("latency.txt" below). The simulator should visualize the execution of these instructions and outputs the change of CPU states.
+
+### 2. Compile and Run
+
+Open the terminal, cd to the "pipeline_sim" directory, and execute the following commands:
+
+```bash
+# Compile pipeline_sim
+g++ -std=c++11 ./src/pipeline_sim.cpp ./src/parser.cpp -o pipeline_sim
+
+# The input instructions file is set default as "./instruction.txt"
+# The input latency file is set default as "./latency.txt"
+./pipeline_sim
+```
+
+The first time you run will see nothing changed in the CPU states after each instruction is executed, like this:
+
+```bash
+
+```
+
+It's your work to complete the pipeline simulator.
+
+### 3. TODO
+
+
+
+### 4. Assumptions
+
+1. Compare (cmp) and the following Branch (bge and bne) are considered to be one instruction, like "cmp reg1, reg2 bge/bne label"
+2. Pseudo Memory is of size 5000 bytes, the label is assigned memory according to the .data section.
+3. Input instruction is taken from input.txt while latency is taken from latency.txt.
+
+### 5. Instruction Set
+
+1. add rd, reg1, reg2
+2. add rd, reg1, #imm
+3. add sp, sp, #imm
+4. sub rd, reg1, reg2
+5. sub rd, reg1, #imm
+6. sub sp, sp, #imm
+7. mul rd, reg1, reg2
+8. mul rd, reg1, #imm
+9. mov rd, reg1
+10. mov pc, lr
+11. mov rd, #imm
+12. ldr rd, [reg1, #imm]
+13. ldr rd, [reg1]
+14. ldr rd, =label
+15. ldr lr, [sp, #imm]
+16. ldr rd, [sp, #imm]
+17. str rd, [reg1, #imm]
+18. str rd, [reg1]
+19. str lr, [sp, #imm]
+20. str rd, [sp, #imm]
+21. cmp reg1, reg2 bge label
+22. cmp reg1, reg2 bne label
+23. bl procedureLabel
+24. b label
+25. Exit
+
+### 6. Submission
+
+
+
+### GUI
+
+1. Different colors are used for every pipeline stage.
+2. Instruction in the particular stage is shown just below it in white color.
+3. If there is no instruction in the particular stage then there will be nothing written below it.
+4. When instruction is flushed then it is shown by printing **flush** in that stage.
+5. Whereas when we need a stall to remove hazard **stall** will be written below that stage.
