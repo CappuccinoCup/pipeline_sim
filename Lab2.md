@@ -69,12 +69,3 @@ It's your work to complete the pipeline simulator.
 
 ### 6. Submission
 
-
-
-### GUI
-
-1. Different colors are used for every pipeline stage.
-2. Instruction in the particular stage is shown just below it in white color.
-3. If there is no instruction in the particular stage then there will be nothing written below it.
-4. When instruction is flushed then it is shown by printing **flush** in that stage.
-5. Whereas when we need a stall to remove hazard **stall** will be written below that stage.

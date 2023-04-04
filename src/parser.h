@@ -1,20 +1,17 @@
-#ifndef ARM_PIPELINE_PARSER_H
-#define ARM_PIPELINE_PARSER_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <iostream>
-#include <fstream>
 #include <bits/stdc++.h>
-#include <string.h>
-#include <ctype.h>
+#include <string>
 #include <vector>
+#include "arm_instr.h"
 
 using namespace std;
 
-extern vector <string> lexeme;
-extern int prog;
+const string latency_path = "./latency.txt";
+const string instruction_path = "./instruction.txt";
 
-int execute(int pc);
+int parse_file(vector<int> &latencies, vector<Instruction> &instructions);
 
-int compare(int pc);
-
-#endif //ARM_PIPELINE_PARSER_H
+#endif // PARSER_H
