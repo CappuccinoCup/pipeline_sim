@@ -1,388 +1,7 @@
 #include "parser.h"
 
-int lex_idx = 0;
-
-
-// add / sub / mul / mov / ldr / str
-int execute(vector<string> &lexeme, int curr_lex) {
-    //Add rd,rop1,rop2
-    //cout<<lex_idx<<endl;
-    if (lexeme[curr_lex] == "Add" || lexeme[curr_lex] == "add" || lexeme[curr_lex] == "ADD") {
-        if ((lexeme[curr_lex + 2] == ",") && (lexeme[curr_lex + 4] == ",")) {
-            //cout<<"Error";
-            //Add rd,rop1,rop2;
-            if ((lexeme[curr_lex + 1][0] == 'r') && (lexeme[curr_lex + 3][0] == 'r') &&
-                (lexeme[curr_lex + 5][0] == 'r')) {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP &&
-                    stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            }
-                //Add rd,rop1,#Imm
-            else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r' &&
-                     lexeme[curr_lex + 5][0] == '#') {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            }
-                //Add SP,SP,#Imm;
-            else if ((lexeme[curr_lex + 1] == "SP" || lexeme[curr_lex + 1] == "sp") &&
-                     (lexeme[curr_lex + 3] == "SP" || lexeme[curr_lex + 3] == "sp") && lexeme[curr_lex + 5][0] == '#') {
-                lex_idx = curr_lex + 6;
-                return 0;
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 6;
-            return -1;
-        }
-
-        //';' excluded from every instruction
-
-    }
-
-        //Variation of subtraction
-    else if (lexeme[curr_lex] == "Sub" || lexeme[curr_lex] == "sub" || lexeme[curr_lex] == "SUB") {
-        if ((lexeme[curr_lex + 2] == ",") && (lexeme[curr_lex + 4] == ",")) {
-            //cout<<"Error";
-            //Sub rd,rop1,rop2;
-            if ((lexeme[curr_lex + 1][0] == 'r') && (lexeme[curr_lex + 3][0] == 'r') &&
-                (lexeme[curr_lex + 5][0] == 'r')) {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP &&
-                    stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            }
-                //Sub rd,rop1,#Imm;
-            else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r' &&
-                     lexeme[curr_lex + 5][0] == '#') {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            }
-                //Sub SP,SP,#Imm;
-            else if ((lexeme[curr_lex + 1] == "SP" || lexeme[curr_lex + 1] == "sp") &&
-                     (lexeme[curr_lex + 3] == "SP" || lexeme[curr_lex + 3] == "sp") && lexeme[curr_lex + 5][0] == '#') {
-                lex_idx = curr_lex + 6;
-                return 0;
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 6;
-            return -1;
-        }
-        //lex_idx = curr_lex+6;
-    }
-
-        //variation of mul instruction
-    else if (lexeme[curr_lex] == "Mul" || lexeme[curr_lex] == "mul" || lexeme[curr_lex] == "MUL") {
-        if ((lexeme[curr_lex + 2] == ",") && (lexeme[curr_lex + 4] == ",")) {
-            //cout<<"Error";
-            //Mul rd,rop1,rop2
-            if ((lexeme[curr_lex + 1][0] == 'r') && (lexeme[curr_lex + 3][0] == 'r') &&
-                (lexeme[curr_lex + 5][0] == 'r')) {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP &&
-                    stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            }
-                //Mul rd,rop1,#Imm
-            else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r' &&
-                     lexeme[curr_lex + 5][0] == '#') {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 6;
-            return -1;
-        }
-        //lex_idx = curr_lex+6;
-    } else if (lexeme[curr_lex] == "Mov" || lexeme[curr_lex] == "mov" || lexeme[curr_lex] == "MOV") {
-        if ((lexeme[curr_lex + 2] == ",")) {
-            //Mov r1,#Imm
-            if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == '#') {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 4;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 4;
-                    return -1;
-                }
-
-            }
-                //Mov rop1,rop2
-            else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r') {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 4;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 4;
-                    return -1;
-                }
-                // lex_idx = curr_lex+4;
-            }
-                //Mov curr_lex,lr
-            else if ((lexeme[curr_lex + 1] == "pc") && lexeme[curr_lex + 3] == "lr") {
-                lex_idx = curr_lex + 4;
-                return 0;
-            } else {
-                lex_idx = curr_lex + 4;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 4;
-            return -1;
-
-        }
-        //lex_idx = curr_lex+4;
-    }
-
-        //memory instructions
-    else if (lexeme[curr_lex] == "Ldr" || lexeme[curr_lex] == "ldr" || lexeme[curr_lex] == "LDR") {
-        //Ldr rd,=label
-        if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == '=') {
-            lex_idx = curr_lex + 4;
-            return 0;
-        }
-
-            //Ldr rd,[rop1]
-        else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 4][0] == 'r' && lexeme[curr_lex + 5] == "]") {
-            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]") {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-            //lex_idx = curr_lex + 6;
-        }
-
-            //Ldr rd,[rop1,#Imm]
-        else if ((lexeme[curr_lex + 1][0] == 'r') && (lexeme[curr_lex + 4][0] == 'r') &&
-                 (lexeme[curr_lex + 6][0] == '#')) {
-            if ((lexeme[curr_lex + 2] == ",")) {
-                if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 7] == "]" && (lexeme[curr_lex + 5] == ",")) {
-                    if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP &&
-                        stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
-                        lex_idx = curr_lex + 8;
-                        return 0;
-                    } else {
-                        lex_idx = curr_lex + 8;
-                        return -1;
-                    }
-                } else {
-                    lex_idx = curr_lex + 8;
-                    return -1;
-                }
-            } else {
-                lex_idx = curr_lex + 8;
-                return -1;
-            }
-        }
-
-
-            //Ldr LR,[SP,#Imm]
-            //Ldr rop1,[SP,#Imm]
-        else if ((lexeme[curr_lex + 4] == "SP" || lexeme[curr_lex + 4] == "sp") && lexeme[curr_lex + 6][0] == '#' &&
-                 lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 5] == ",") {
-            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 7] == "]") {
-                string s = lexeme[curr_lex + 1].substr(1);
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(s) < REG_SP) {
-                    lex_idx = curr_lex + 8;
-                    return 0;
-                } else if (lexeme[curr_lex + 1] == "LR" || lexeme[curr_lex + 1] == "lr") {
-                    lex_idx = curr_lex + 8;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 8;
-                    return -1;
-                }
-                //lex_idx=curr_lex+8;
-            } else {
-                lex_idx = curr_lex + 8;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 8;
-            return -1;
-        }
-    }
-
-        //store instruction
-
-    else if (lexeme[curr_lex] == "Str" || lexeme[curr_lex] == "str" || lexeme[curr_lex] == "STR") {
-        //Ldr rd,=label
-        if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == '=') {
-            lex_idx = curr_lex + 4;
-            return 0;
-        }
-            //Ldr rd,[rop1]
-        else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 4][0] == 'r' && lexeme[curr_lex + 5] == "]") {
-            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]") {
-                if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-            //lex_idx = curr_lex + 6;
-        }
-            //Str rd,[rop1,#Imm]
-        else if ((lexeme[curr_lex + 1][0] == 'r') && (lexeme[curr_lex + 4][0] == 'r') &&
-                 (lexeme[curr_lex + 6][0] == '#')) {
-            if ((lexeme[curr_lex + 2] == ",")) {
-                if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 7] == "]" && (lexeme[curr_lex + 5] == ",")) {
-                    if (stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP &&
-                        stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
-                        lex_idx = curr_lex + 8;
-                        return 0;
-                    } else {
-                        lex_idx = curr_lex + 8;
-                        return -1;
-                    }
-                } else {
-                    lex_idx = curr_lex + 8;
-                    return -1;
-                }
-            } else {
-                lex_idx = curr_lex + 8;
-                return -1;
-            }
-        }
-
-
-            //Ldr LR,[SP,#Imm]
-            //Ldr rop1,[SP,#Imm]
-        else if ((lexeme[curr_lex + 4] == "SP" || lexeme[curr_lex + 4] == "sp") && lexeme[curr_lex + 6][0] == '#' &&
-                 lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 5] == ",") {
-            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 7] == "]") {
-                string s = lexeme[curr_lex + 1].substr(1);
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(s) < REG_SP) {
-                    lex_idx = curr_lex + 8;
-                    return 0;
-                } else if (lexeme[curr_lex + 1] == "LR" || lexeme[curr_lex + 1] == "lr") {
-                    lex_idx = curr_lex + 8;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 8;
-                    return -1;
-                }
-                //lex_idx=curr_lex+8;
-            } else {
-                lex_idx = curr_lex + 8;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 8;
-            return -1;
-        }
-    }
-    return -1;
-}
-
-// cmp & bne / cmp & bge / bl / b
-int compare(vector<string> &lexeme, int curr_lex) {
-    //Cmp rop1,rop2
-    //Bne label
-    //cout<<"hello"<<lex_idx<<endl;
-    if (lexeme[curr_lex + 4] == "Bne" || lexeme[curr_lex + 4] == "bne" || lexeme[curr_lex + 4] == "BNE") {
-        if (lexeme[curr_lex + 2] == ",") {
-            if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r') {
-                if ((stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP) &&
-                    (stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP)) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            } else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == '#') {
-                lex_idx = curr_lex + 6;
-                return 0;
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 6;
-            return -1;
-        }
-    }
-
-        //Cmp rop1,rop2
-        //Bge label
-    else if (lexeme[curr_lex + 4] == "Bge" || lexeme[curr_lex + 4] == "bge" || lexeme[curr_lex + 4] == "BGE") {
-        if (lexeme[curr_lex + 2] == ",") {
-            if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == 'r') {
-                if ((stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP) &&
-                    (stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP)) {
-                    lex_idx = curr_lex + 6;
-                    return 0;
-                } else {
-                    lex_idx = curr_lex + 6;
-                    return -1;
-                }
-            } else if (lexeme[curr_lex + 1][0] == 'r' && lexeme[curr_lex + 3][0] == '#') {
-                lex_idx = curr_lex + 6;
-                return 0;
-            } else {
-                lex_idx = curr_lex + 6;
-                return -1;
-            }
-        } else {
-            lex_idx = curr_lex + 6;
-            return -1;
-        }
-    } else {
-        lex_idx = curr_lex + 6;
-        return -1;
-    }
-}
-
-
 // ====================== LATENCY PARSING ======================
+
 int parse_latency(vector<string> &lexeme, vector<int> &latencies) {
     int error = 0;
 
@@ -441,12 +60,217 @@ int read_latency(vector<int> &latencies) {
 
     return parse_latency(lexeme, latencies);
 }
+
 // ====================== LATENCY PARSING ======================
 
 
 // ==================== INSTRUCTION PARSING ====================
+
+/**
+ * Classify no-label instructions, including:
+ * [add, sub, mul, mov, ldr, str]
+ * Return the format type of the instruction
+*/
+ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
+    string lex_lower = lexeme[curr_lex];
+    transform(lex_lower.begin(), lex_lower.end(), lex_lower.begin(), ::tolower);
+
+    if (lex_lower == "add") {
+        // add xx, xxx, ...
+        if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
+            // add rd, reg1, ...
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+                // 1. add rd, reg1, reg2
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                    return OPC_TYPE_ADD_REG;
+                }
+                // 2. add rd, reg1, #imm
+                if (lexeme[curr_lex + 5][0] == '#') {
+                    return OPC_TYPE_ADD_IMM;
+                }
+            }
+            // 3. add sp, sp, #imm
+            if (lexeme[curr_lex + 1] == "sp" && lexeme[curr_lex + 3] == "sp"
+                && lexeme[curr_lex + 5][0] == '#') {
+                return OPC_TYPE_ADD_SP_IMM;
+            }
+        }
+    }
+
+    if (lex_lower == "sub") {
+        // sub xx, xxx, ...
+        if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
+            // sub rd, reg1, ...
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+                // 4. sub rd, reg1, reg2
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                    return OPC_TYPE_SUB_REG;
+                }
+                // 5. sub rd, reg1, #imm
+                if (lexeme[curr_lex + 5][0] == '#') {
+                    return OPC_TYPE_SUB_IMM;
+                }
+            }
+            // 6. sub sp, sp, #imm
+            if (lexeme[curr_lex + 1] == "sp" && lexeme[curr_lex + 3] == "sp"
+                && lexeme[curr_lex + 5][0] == '#') {
+                return OPC_TYPE_SUB_SP_IMM;
+            }
+        }
+    }
+
+    if (lex_lower == "mul") {
+        // mul xx, xxx, ...
+        if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
+            // mul rd, reg1, ...
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+                // 7. mul rd, reg1, reg2
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                    return OPC_TYPE_MUL_REG;
+                }
+                // 8. mul rd, reg1, #imm
+                if (lexeme[curr_lex + 5][0] == '#') {
+                    return OPC_TYPE_MUL_IMM;
+                }
+            }
+        }
+    }
+
+    if (lex_lower == "mov") {
+        // mov xx, ...
+        if (lexeme[curr_lex + 2] == ",") {
+            // 9. mov rd, reg1
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+                return OPC_TYPE_MOV_REG;
+            }
+            // 10. mov pc, lr
+            if (lexeme[curr_lex + 1] == "pc" && lexeme[curr_lex + 3] == "lr") {
+                return OPC_TYPE_MOV_PC_LR;
+            }
+            // 11. mov rd, #imm
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == '#') {
+                return OPC_TYPE_MOV_IMM;
+            }
+        }
+    }
+
+    if (lex_lower == "ldr") {
+        // ldr xx, ...
+        if (lexeme[curr_lex + 2] == ",") {
+            // 12. ldr rd, =label
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3][0] == '=') {
+                return OPC_TYPE_LDR_LABEL;
+            }
+            // 13. ldr rd, [reg1]
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]"
+                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
+                return OPC_TYPE_LDR_REG;
+            }
+            // ldr xx, [xxx, xxx] ...
+            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "," && lexeme[curr_lex + 7] == "]") {
+                // 14. ldr rd, [reg1, #imm]
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_LDR_REG_OFFSET;
+                }
+                // 15. ldr rd, [sp, #imm]
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 4] == "sp" && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_LDR_SP_OFFSET;
+                }
+                // 16. ldr lr, [sp, #imm]
+                if (lexeme[curr_lex + 1] == "lr" && lexeme[curr_lex + 4] == "sp"
+                    && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_LDR_LR_SP_OFFSET;
+                }
+            }
+        }
+    }
+
+    if (lex_lower == "str") {
+        // str xx, ...
+        if (lexeme[curr_lex + 2] == ",") {
+            // 17. str rd, [reg1]
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                && lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]"
+                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
+                return OPC_TYPE_STR_REG;
+            }
+            // str xx, [xxx, xxx] ...
+            if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "," && lexeme[curr_lex + 7] == "]") {
+                // 18. str rd, [reg1, #imm]
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_STR_REG_OFFSET;
+                }
+                // 19. str rd, [sp, #imm]
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                    && lexeme[curr_lex + 4] == "sp" && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_STR_SP_OFFSET;
+                }
+                // 20. str lr, [sp, #imm]
+                if (lexeme[curr_lex + 1] == "lr" && lexeme[curr_lex + 4] == "sp"
+                    && lexeme[curr_lex + 6][0] == '#') {
+                    return OPC_TYPE_STR_LR_SP_OFFSET;
+                }
+            }
+        }
+    }
+
+    return OPC_TYPE_INVALID;
+}
+
+/**
+ * Classify compare instructions, including:
+ * [cmp & bne, cmp & bge]
+ * Return the format type of the instruction
+*/
+ARM_OPC_TYPE classify_cmp(vector<string> &lexeme, int curr_lex) {
+    string lex_lower = lexeme[curr_lex + 4];
+    transform(lex_lower.begin(), lex_lower.end(), lex_lower.begin(), ::tolower);
+
+    // cmp reg1, xxx bne/bge ...
+    if (lex_lower == "bne" || lex_lower == "bge" && lexeme[curr_lex + 2] == ","
+                              && lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP) {
+        // cmp reg1, reg2 bne/bge ...
+        if (lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+            // 21. cmp reg1, reg2 bne label
+            if (lex_lower == "bne") {
+                return OPC_TYPE_CMP_BNE_REG;
+            }
+            // 23. cmp reg1, reg2 bge label
+            if (lex_lower == "bge") {
+                return OPC_TYPE_CMP_BGE_REG;
+            }
+        }
+        // cmp reg1, #imm bne/bge ...
+        if (lexeme[curr_lex + 3][0] == '#') {
+            // 22. cmp reg1, #imm bne label
+            if (lex_lower == "bne") {
+                return OPC_TYPE_CMP_BNE_IMM;
+            }
+            // 24. cmp reg1, #imm bge label
+            if (lex_lower == "bge") {
+                return OPC_TYPE_CMP_BGE_IMM;
+            }
+        }
+    }
+
+    return OPC_TYPE_INVALID;
+}
+
 int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) {
     int error = 0;
+    int lex_idx = 0;
 
     int freemem = 5000;
     vector<symbol> symbol_table;
@@ -455,361 +279,305 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
     while (lex_idx < lexeme.size()) {
         string lex_lower = lexeme[lex_idx];
         transform(lex_lower.begin(), lex_lower.end(), lex_lower.begin(), ::tolower);
-        if (lexeme[lex_idx] == "add" || lexeme[lex_idx] == "sub" || lexeme[lex_idx] == "mul" ||
-            lexeme[lex_idx] == "mov" || lexeme[lex_idx] == "ldr" || lexeme[lex_idx] == "str") {
-            int p1 = lex_idx;
-            int p = execute(lexeme, lex_idx);
-            lex_idx = p1;
-            if (p == -1) {
+
+        if (lex_lower == "add" || lex_lower == "sub" || lex_lower == "mul"
+            || lex_lower == "mov" || lex_lower == "ldr" || lex_lower == "str") {
+            ARM_OPC_TYPE opc_type = classify_no_label(lexeme, lex_idx);
+
+            if (opc_type == OPC_TYPE_INVALID) {
                 cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
                 lex_idx++;
                 error++;
             } else {
-
-                if (lexeme[lex_idx] == "Add" || lexeme[lex_idx] == "add" || lexeme[lex_idx] == "ADD")       //Addition
-                {
-                    Instruction temp_i;
-                    temp_i.opcode = OPC_ADD;
-
-                    //Add rd,rop1,rop2
-                    if (lexeme[lex_idx + 5][0] == 'r') {
-                        temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                        temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                        temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                        temp_i.type = 1;
-                    } else {
-
-                        //Add rd ,rop1,#Imm
-                        if (lexeme[lex_idx + 3][0] == 'r') {
-                            temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                            temp_i.type = 2;
-                        }
-                            //Add SP,SP,#IMM
-                        else if (lexeme[lex_idx + 3] == "SP" || lexeme[lex_idx + 3] == "Sp" ||
-                                 lexeme[lex_idx + 3] == "sp") {
-                            temp_i.source = REG_SP;
-                            temp_i.operand1 = REG_SP;
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                            temp_i.type = 2;
-                        }
-
-                    }
-                    instructions.push_back(temp_i);
-                    lex_idx += 6;
-                } else if (lexeme[lex_idx] == "Sub" || lexeme[lex_idx] == "sub" ||
-                           lexeme[lex_idx] == "SUB")      //Subtract
-                {
-                    Instruction temp_i;
-                    temp_i.opcode = OPC_SUB;
-
-                    //Sub rd,rop1,rop2
-                    if (lexeme[lex_idx + 5][0] == 'r') {
-                        temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                        temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                        temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                        temp_i.type = 1;
-                    } else {
-
-                        //Add rd ,rop1,#Imm
-                        if (lexeme[lex_idx + 3][0] == 'r') {
-                            temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                            temp_i.type = 2;
-                        }
-                            //Add SP,SP,#IMM
-                        else if (lexeme[lex_idx + 3] == "SP" || lexeme[lex_idx + 3] == "Sp" ||
-                                 lexeme[lex_idx + 3] == "sp") {
-                            temp_i.source = REG_SP;
-                            temp_i.operand1 = REG_SP;
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                            temp_i.type = 2;
-                        }
-
-                    }
-                    instructions.push_back(temp_i);
-                    lex_idx += 6;
-                } else if (lexeme[lex_idx] == "Mul" || lexeme[lex_idx] == "mul" ||
-                           lexeme[lex_idx] == "MUL")      //Multiply
-                {
-                    Instruction temp_i;
-                    temp_i.opcode = OPC_MUL;
-                    temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                    temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                    //Mul rd,rop1,rop2
-                    if (lexeme[lex_idx + 5][0] == 'r') {
-                        temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                        temp_i.type = 1;
-                    }
-                        //Mul rd, rop1,#Imm
-                    else {
-                        temp_i.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
-                        temp_i.type = 2;
-                    }
-                    instructions.push_back(temp_i);
-                    lex_idx += 6;
-                } else if (lexeme[lex_idx] == "Mov" || lexeme[lex_idx] == "mov" || lexeme[lex_idx] == "MOV")      //Move
-                {
-                    Instruction temp_i;
-
-                    temp_i.opcode = OPC_MOV;
-                    if ((lexeme[lex_idx + 1] == "pc" || lexeme[lex_idx + 1] == "Pc" || lexeme[lex_idx + 1] == "PC") &&
-                        (lexeme[lex_idx + 3] == "lr" || lexeme[lex_idx + 3] == "Lr" || lexeme[lex_idx + 3] == "LR")) {
-                        temp_i.source = -1;
-                        temp_i.operand1 = -1;
-                        temp_i.type = 3;
-                        instructions.push_back(temp_i);
-                    } else {
-                        temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                        temp_i.operand2 = -1;
-                        if (lexeme[lex_idx + 3][0] == 'r')  //Mov rd rop1
-                        {
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                            temp_i.type = 1;
-                        } else//Mov rd #12
-                        {
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
-                            temp_i.type = 2;
-                        }
-                        instructions.push_back(temp_i);
-                    }
-                    lex_idx += 4;
-
-                } else if (lexeme[lex_idx] == "Ldr" || lexeme[lex_idx] == "ldr" ||
-                           lexeme[lex_idx] == "LDR")          //Load
-                {
-                    Instruction temp_i;
-                    temp_i.opcode = OPC_LDR;
-                    if (lexeme[lex_idx + 1] == "LR" || lexeme[lex_idx + 1] == "Lr" || lexeme[lex_idx + 1] == "lr") {
-                        temp_i.source = REG_LR;
-                    } else {
-                        temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                    }
-
-                    if (lexeme[lex_idx + 3][0] == '[')      //Ldr rd, [rop1]
-                    {
-                        if (lexeme[lex_idx + 5][0] == ']') {
-                            //ldr rd,[sp]
-                            if (lexeme[lex_idx + 4] == "SP" || lexeme[lex_idx + 4] == "Sp" ||
-                                lexeme[lex_idx + 4] == "sp") {
-                                temp_i.operand1 = REG_SP;
-                                temp_i.operand2 = -1;
-                                temp_i.type = 1;
-                                lex_idx += 6;
-                            } else {
-                                temp_i.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
-                                temp_i.operand2 = -1;
-                                temp_i.type = 1;
-                                lex_idx += 6;
-                            }
-                        } else {
-                            //ldr rd,[sp,#IMM]
-                            if (lexeme[lex_idx + 4] == "SP" || lexeme[lex_idx + 4] == "Sp" ||
-                                lexeme[lex_idx + 4] == "sp") {
-                                temp_i.operand1 = REG_SP;
-                                temp_i.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
-                                temp_i.type = 2;
-                                lex_idx += 8;
-                            } else {
-                                temp_i.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
-                                temp_i.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
-                                temp_i.type = 2;
-                                lex_idx += 8;
-                            }
-                        }
-                    } else if (lexeme[lex_idx + 3][0] == '=')      //Ldr rd, =AA
-                    {
-                        temp_i.operand1 = -2;
-                        symbol tem;                                       //change
-                        tem.name = lexeme[lex_idx + 3].substr(1);
-                        tem.pos = instructions.size();
-                        tem.type = 1;
-                        symbol_temps.push_back(tem);
-                        temp_i.operand2 = -1;
-                        temp_i.type = 3;
-                        lex_idx += 4;                                                    //change
-                    }
-                    instructions.push_back(temp_i);
-                } else        //Store
-                {
-                    Instruction temp_i;
-                    temp_i.opcode = OPC_STR;
-
-                    if (lexeme[lex_idx + 1] == "LR" || lexeme[lex_idx + 1] == "Lr" || lexeme[lex_idx + 1] == "lr") {
-                        temp_i.source = REG_LR;
-                    } else {
-                        temp_i.source = stoi(lexeme[lex_idx + 1].substr(1));
-                    }
-                    if (lexeme[lex_idx + 4][0] == 'r' && lexeme[lex_idx + 5][0] == ']')      //Str rd, [rop1]
-                    {
-                        if (lexeme[lex_idx + 4] == "SP" || lexeme[lex_idx + 4] == "Sp" || lexeme[lex_idx + 4] == "sp") {
-                            temp_i.operand1 = REG_SP;
-                            temp_i.operand2 = -1;
-                            temp_i.type = 1;
-                            lex_idx += 6;
-                        } else {
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
-                            temp_i.operand2 = -1;
-                            temp_i.type = 1;
-                            lex_idx += 6;
-                        }
-                    } else        //Str rd, [rop1, #21]
-                    {
-                        if (lexeme[lex_idx + 4] == "SP" || lexeme[lex_idx + 4] == "Sp" || lexeme[lex_idx + 4] == "sp") {
-                            temp_i.operand1 = REG_SP;
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
-                            temp_i.type = 2;
-                            lex_idx += 8;
-                        } else {
-                            temp_i.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
-                            temp_i.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
-                            temp_i.type = 2;
-                            lex_idx += 8;
-                        }
-                    }
-                    instructions.push_back(temp_i);
+                Instruction I;
+                symbol sym;
+                switch (opc_type) {
+                    case OPC_TYPE_ADD_REG:
+                        I.opcode = OPC_ADD;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_ADD_IMM:
+                        I.opcode = OPC_ADD;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_ADD_SP_IMM:
+                        I.opcode = OPC_ADD;
+                        I.dest = REG_SP;
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_SUB_REG:
+                        I.opcode = OPC_SUB;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_SUB_IMM:
+                        I.opcode = OPC_SUB;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_SUB_SP_IMM:
+                        I.opcode = OPC_SUB;
+                        I.dest = REG_SP;
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_MUL_REG:
+                        I.opcode = OPC_MUL;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_MUL_IMM:
+                        I.opcode = OPC_MUL;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_MOV_REG:
+                        I.opcode = OPC_MOV;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 4;
+                        break;
+                    case OPC_TYPE_MOV_IMM:
+                        I.opcode = OPC_MOV;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 4;
+                        break;
+                    case OPC_TYPE_MOV_PC_LR:
+                        I.opcode = OPC_MOV;
+                        I.type = INSTR_TYPE_EXTRA;
+                        lex_idx += 4;
+                        break;
+                    case OPC_TYPE_LDR_LABEL:
+                        I.opcode = OPC_LDR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.type = INSTR_TYPE_EXTRA;
+                        sym.type = SYMBOL_LDR_LABEL;
+                        sym.name = lexeme[lex_idx + 3].substr(1);
+                        sym.pos = instructions.size();
+                        symbol_temps.push_back(sym);
+                        lex_idx += 4;
+                        break;
+                    case OPC_TYPE_LDR_REG:
+                        I.opcode = OPC_LDR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_LDR_REG_OFFSET:
+                        I.opcode = OPC_LDR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    case OPC_TYPE_LDR_SP_OFFSET:
+                        I.opcode = OPC_LDR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    case OPC_TYPE_LDR_LR_SP_OFFSET:
+                        I.opcode = OPC_LDR;
+                        I.dest = REG_LR;
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    case OPC_TYPE_STR_REG:
+                        I.opcode = OPC_STR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_STR_REG_OFFSET:
+                        I.opcode = OPC_STR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = stoi(lexeme[lex_idx + 4].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    case OPC_TYPE_STR_SP_OFFSET:
+                        I.opcode = OPC_STR;
+                        I.dest = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    case OPC_TYPE_STR_LR_SP_OFFSET:
+                        I.opcode = OPC_STR;
+                        I.dest = REG_LR;
+                        I.operand1 = REG_SP;
+                        I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        lex_idx += 8;
+                        break;
+                    default:
+                        cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
+                        break;
+                }
+                if (I.opcode != OPC_INVALID) {
+                    instructions.push_back(I);
                 }
             }
 
-        } else if (lexeme[lex_idx] == "Cmp" || lexeme[lex_idx] == "cmp" || lexeme[lex_idx] == "CMP")         //compare
-        {
-            int q1 = lex_idx;
-            int q = compare(lexeme, lex_idx);
-            lex_idx = q1;
-            if (q == -1) {
-                cout << "Error in cmp instruction" << endl;
+            continue;
+        }
+
+        if (lex_lower == "cmp") {
+            ARM_OPC_TYPE opc_type = classify_cmp(lexeme, lex_idx);
+
+            if (opc_type == OPC_TYPE_INVALID) {
+                cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
                 lex_idx++;
                 error++;
-            } else if (lexeme[lex_idx + 4] == "Bne" || lexeme[lex_idx + 4] == "bne" ||
-                       lexeme[lex_idx + 4] == "BNE")      //cmp and bne
-            {
-                Instruction temp_i;
-                temp_i.opcode = OPC_CMPBNE;
-                temp_i.source = -2;                             //change
-                symbol tem;                                   //change
-                tem.name = lexeme[lex_idx + 5];
-                tem.pos = instructions.size();
-                symbol_temps.push_back(tem);
-                if (lexeme[lex_idx + 1][0] == 'r' && lexeme[lex_idx + 3][0] == 'r')          //cmp rd, rop
-                {
-                    temp_i.operand1 = stoi(lexeme[lex_idx + 1].substr(1));                                   //change
-                    temp_i.operand2 = stoi(lexeme[lex_idx + 3].substr(1));                                   //change
-                    temp_i.type = 1;
-                    lex_idx += 6;
-                } else if (lexeme[lex_idx + 1][0] == 'r' && lexeme[lex_idx + 3][0] == '#')        //cmp rd, #5
-                {
-                    temp_i.operand1 = stoi(lexeme[lex_idx + 1].substr(1));                                   //change
-                    temp_i.operand2 = stoi(lexeme[lex_idx + 3].substr(1));                                   //change
-                    temp_i.type = 2;
-                    lex_idx += 6;
+            } else {
+                Instruction I;
+                symbol sym;
+                switch (opc_type) {
+                    case OPC_TYPE_CMP_BNE_REG:
+                        I.opcode = OPC_CMPBNE;
+                        I.operand1 = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        sym.type = SYMBOL_JMP_LABEL;
+                        sym.name = lexeme[lex_idx + 5];
+                        sym.pos = instructions.size();
+                        symbol_temps.push_back(sym);
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_CMP_BNE_IMM:
+                        I.opcode = OPC_CMPBNE;
+                        I.operand1 = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        sym.type = SYMBOL_JMP_LABEL;
+                        sym.name = lexeme[lex_idx + 5];
+                        sym.pos = instructions.size();
+                        symbol_temps.push_back(sym);
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_CMP_BGE_REG:
+                        I.opcode = OPC_CMPBGE;
+                        I.operand1 = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_REG;
+                        sym.type = SYMBOL_JMP_LABEL;
+                        sym.name = lexeme[lex_idx + 5];
+                        sym.pos = instructions.size();
+                        symbol_temps.push_back(sym);
+                        lex_idx += 6;
+                        break;
+                    case OPC_TYPE_CMP_BGE_IMM:
+                        I.opcode = OPC_CMPBGE;
+                        I.operand1 = stoi(lexeme[lex_idx + 1].substr(1));
+                        I.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
+                        I.type = INSTR_TYPE_IMM;
+                        sym.type = SYMBOL_JMP_LABEL;
+                        sym.name = lexeme[lex_idx + 5];
+                        sym.pos = instructions.size();
+                        symbol_temps.push_back(sym);
+                        lex_idx += 6;
+                        break;
+                    default:
+                        cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
+                        break;
                 }
-                instructions.push_back(temp_i);
-            } else if (lexeme[lex_idx + 4] == "Bge" || lexeme[lex_idx + 4] == "bge" ||
-                       lexeme[lex_idx + 4] == "BGE")         //cmp and bge
-            {
-                Instruction temp_i;
-                temp_i.opcode = OPC_CMPBGE;
-                temp_i.source = -2;                                                             //change
-                symbol tem;                                                                       //change
-                tem.name = lexeme[lex_idx + 5];
-                tem.pos = instructions.size();
-                symbol_temps.push_back(tem);
-                if (lexeme[lex_idx + 1][0] == 'r' && lexeme[lex_idx + 3][0] == 'r')          //cmp rd, rop
-                {
-                    temp_i.operand1 = stoi(lexeme[lex_idx + 1].substr(1));                                   //change
-                    temp_i.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
-                    temp_i.type = 1;
-                    lex_idx += 6;
-                } else if (lexeme[lex_idx + 1][0] == 'r' && lexeme[lex_idx + 3][0] == '#')        //cmp rd, rop
-                {
-                    temp_i.operand1 = stoi(lexeme[lex_idx + 1].substr(1));                                   //change
-                    temp_i.operand2 = stoi(lexeme[lex_idx + 3].substr(1));
-                    temp_i.type = 2;
-                    lex_idx += 6;
+                if (I.opcode != OPC_INVALID) {
+                    instructions.push_back(I);
                 }
-                instructions.push_back(temp_i);
             }
 
-        } else if (lexeme[lex_idx] == "BL" || lexeme[lex_idx] == "bl" || lexeme[lex_idx] == "Bl")     //branch
-        {
-            //cout<<"shyamlal"<<endl;
-            Instruction temp_i;
-            temp_i.opcode = OPC_BL;
-            temp_i.source = -2;
-            temp_i.operand1 = -1;
-            temp_i.operand2 = -1;
-            temp_i.type = 1;
-            symbol tem;                                                                   //change
-            tem.name = lexeme[lex_idx + 1];
-            tem.pos = instructions.size();
-            symbol_temps.push_back(tem);
-            lex_idx += 2;
-            instructions.push_back(temp_i);
-        } else if (lexeme[lex_idx] == "B" || lexeme[lex_idx] == "b")        //branch
-        {
-            //cout<<"shyamlal"<<endl;
-            Instruction temp_i;
-            temp_i.opcode = OPC_B;
-            temp_i.source = -2;
-            temp_i.operand1 = -1;
-            temp_i.operand2 = -1;
-            temp_i.type = 1;
-            symbol tem;                                                                   //change
-            tem.name = lexeme[lex_idx + 1];
-            tem.pos = instructions.size();
-            symbol_temps.push_back(tem);
-            lex_idx += 2;
-            instructions.push_back(temp_i);
-        } else if (lexeme[lex_idx] == ":") {
-            symbol tem;
-            tem.name = lexeme[lex_idx - 1];
-            if (lexeme[lex_idx + 1] == ".space") {
-                tem.pos = freemem;
-                freemem = freemem + stoi(lexeme[lex_idx + 2]);
-                tem.type = 2;
-            } else {
-                tem.pos = instructions.size();
+            continue;
+        }
+
+        if (lex_lower == "bl" || lex_lower == "b") {
+            Instruction I;
+            symbol sym;
+            if (lex_lower == "bl") {
+                I.opcode = OPC_BL;
             }
-            symbol_table.push_back(tem);
+            if (lex_lower == "b") {
+                I.opcode = OPC_B;
+            }
+            sym.type = SYMBOL_JMP_LABEL;
+            sym.name = lexeme[lex_idx + 1];
+            sym.pos = instructions.size();
+            symbol_temps.push_back(sym);
+            lex_idx += 2;
+            instructions.push_back(I);
+            continue;
+        }
+
+        if (lex_lower == ":") {
+            symbol sym;
+            sym.name = lexeme[lex_idx - 1];
+            if (lexeme[lex_idx + 1] == ".space") {
+                sym.type = SYMBOL_DATA_LABEL;
+                sym.pos = freemem;
+                freemem = freemem + stoi(lexeme[lex_idx + 2]);
+            } else {
+                sym.type = SYMBOL_JMP_LABEL;
+                sym.pos = instructions.size();
+            }
+            symbol_table.push_back(sym);
             lex_idx++;
-        } else if (lexeme[lex_idx] == "Exit" || lexeme[lex_idx] == "exit" || lexeme[lex_idx] == "EXIT" ||
-                   lexeme[lex_idx] == "Swi_Exit" || lexeme[lex_idx] == "swi_exit" || lexeme[lex_idx] == "SWI_EXIT") {
-            Instruction temp_i;
-            temp_i.opcode = OPC_EXIT;
-            temp_i.source = -1;
-            temp_i.operand1 = -1;
-            temp_i.operand2 = -1;
-            temp_i.type = -1;
-            instructions.push_back(temp_i);
-            //symbol tem;
+            continue;
+        }
+
+        if (lex_lower == "exit") {
+            Instruction I;
+            I.opcode = OPC_EXIT;
+            instructions.push_back(I);
             lex_idx++;
-        } else lex_idx++;
+            continue;
+        }
+
+        lex_idx++;
     }
 
-    symbol tem_e;
-    tem_e.name = "Exit";
-    tem_e.pos = instructions.size();
-    symbol_table.push_back(tem_e);
-    tem_e.name = "exit";
-    symbol_table.push_back(tem_e);
-    tem_e.name = "EXIT";
-    symbol_table.push_back(tem_e);
-    tem_e.name = "Swi_Exit";
-    symbol_table.push_back(tem_e);
-    tem_e.name = "SWI_EXIT";
-    symbol_table.push_back(tem_e);
-    tem_e.name = "swi_exit";
-    symbol_table.push_back(tem_e);
-
-    for (int i = 0; i < symbol_table.size(); ++i) {
-        for (int j = 0; j < symbol_temps.size(); ++j) {
-            if (symbol_table[i].name == symbol_temps[j].name) {
-                if (symbol_temps[j].type == 0) {
-                    instructions[symbol_temps[j].pos].source = symbol_table[i].pos;
+    for (auto &tmp: symbol_temps) {
+        for (auto &sym: symbol_table) {
+            if (tmp.name == sym.name) {
+                if (tmp.type == SYMBOL_JMP_LABEL) {
+                    instructions[tmp.pos].dest = sym.pos;
                 } else {
-                    instructions[symbol_temps[j].pos].operand1 = symbol_table[i].pos;
+                    instructions[tmp.pos].operand1 = sym.pos;
                 }
             }
         }
@@ -854,6 +622,7 @@ int read_instruction(vector<Instruction> &instructions) {
 
     return parse_instruction(lexeme, instructions);
 }
+
 // ==================== INSTRUCTION PARSING ====================
 
 

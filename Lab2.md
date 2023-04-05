@@ -52,20 +52,22 @@ It's your work to complete the pipeline simulator.
 9. mov rd, reg1
 10. mov pc, lr
 11. mov rd, #imm
-12. ldr rd, [reg1, #imm]
+12. ldr rd, =label
 13. ldr rd, [reg1]
-14. ldr rd, =label
-15. ldr lr, [sp, #imm]
-16. ldr rd, [sp, #imm]
-17. str rd, [reg1, #imm]
-18. str rd, [reg1]
-19. str lr, [sp, #imm]
-20. str rd, [sp, #imm]
-21. cmp reg1, reg2 bge label
-22. cmp reg1, reg2 bne label
-23. bl procedureLabel
-24. b label
-25. Exit
+14. ldr rd, [reg1, #imm]
+15. ldr rd, [sp, #imm]
+16. ldr lr, [sp, #imm]
+17. str rd, [reg1]
+18. str rd, [reg1, #imm]
+19. str rd, [sp, #imm]
+20. str lr, [sp, #imm]
+21. cmp reg1, reg2 bne label
+22. cmp reg1, #imm bne label
+23. cmp reg1, reg2 bge label
+24. cmp reg1, #imm bge label
+25. bl procedureLabel
+26. b label
+27. Exit
 
 ### 6. Submission
 

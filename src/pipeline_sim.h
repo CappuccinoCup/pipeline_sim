@@ -9,7 +9,7 @@
 using namespace std;
 
 struct IF_ID {
-    Instruction recent_instruction;
+    Instruction recent_instr;
     int prog_cnt = -1;
 };
 
@@ -20,7 +20,7 @@ struct ID_EX {
     int address;
     int offset;
     int prog_cnt;
-    ARM_OPC_TYPE opcode = OPC_INVALID;
+    ARM_OPC opcode = OPC_INVALID;
     int type;
 };
 
@@ -30,7 +30,7 @@ struct EX_MEM {
     int src;
     bool zero;
     int prog_cnt;
-    ARM_OPC_TYPE opcode = OPC_INVALID;
+    ARM_OPC opcode = OPC_INVALID;
     int type;
 };
 
@@ -38,7 +38,7 @@ struct MEM_WB {
     int write_data;
     int src;
     int prog_cnt;
-    ARM_OPC_TYPE opcode = OPC_INVALID;
+    ARM_OPC opcode = OPC_INVALID;
     int type;
 };
 

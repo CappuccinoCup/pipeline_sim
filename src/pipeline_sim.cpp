@@ -7,10 +7,10 @@ int mem[6000];
 vector<Instruction> instructions;
 vector<int> latencies(12, 0);
 
-int prog;
+int prog = 0;
 int PC_src = 0;
 int shut_down = 0;
-int end_file_inst = 0;
+int file_end = 0;
 
 ofstream fout;
 
@@ -22,9 +22,9 @@ EX_MEM Register_EX_MEM;
 MEM_WB Register_MEM_WB;
 
 void flush() {
-    prog = Register_EX_MEM.val_address - 1;
-    Register_IF_ID.recent_instruction.opcode = OPC_INVALID;
-    Register_IF_ID.recent_instruction.type = -1;
+    prog = Register_EX_MEM.val_address;
+    Register_IF_ID.recent_instr.opcode = OPC_INVALID;
+    Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
     Register_ID_EX.opcode = OPC_INVALID;
     Register_ID_EX.type = -1;
     Register_EX_MEM.opcode = OPC_INVALID;
@@ -33,33 +33,25 @@ void flush() {
 
 void IF() {
     if (PC_src == 0) {
-        prog++;
         if (prog >= instructions.size()) {
             Instruction end_file;
             end_file.opcode = END_OF_FILE;
-            end_file.source = -1;
-            end_file.operand1 = -1;
-            end_file.operand2 = -1;
-            end_file.type = -1;
-            Register_IF_ID.recent_instruction = end_file;
+            Register_IF_ID.recent_instr = end_file;
             Register_IF_ID.prog_cnt = prog;
-        } else if ((Register_IF_ID.recent_instruction.source == instructions[prog].operand1
-                    || Register_IF_ID.recent_instruction.source == instructions[prog].operand2)
-                   && Register_IF_ID.recent_instruction.opcode == OPC_LDR) {
+            prog++;
+        } else if ((Register_IF_ID.recent_instr.dest == instructions[prog].operand1
+                    || Register_IF_ID.recent_instr.dest == instructions[prog].operand2)
+                   && Register_IF_ID.recent_instr.opcode == OPC_LDR) {
             fout << "stall" << endl;
-            prog--;
             Instruction bubble;
             bubble.opcode = BUBBLE;
-            bubble.source = -1;
-            bubble.operand1 = -1;
-            bubble.operand2 = -1;
-            bubble.type = -1;
-            Register_IF_ID.recent_instruction = bubble;
+            Register_IF_ID.recent_instr = bubble;
             Register_IF_ID.prog_cnt = prog;
         } else {
-            Register_IF_ID.recent_instruction = instructions[prog];
+            Register_IF_ID.recent_instr = instructions[prog];
             Register_IF_ID.prog_cnt = prog;
             fout << ARM_OPC_NAME[instructions[prog].opcode] << endl;
+            prog++;
         }
     } else {
         flush();
@@ -70,72 +62,72 @@ void IF() {
 void ID() {
     Register_ID_EX.prog_cnt = Register_IF_ID.prog_cnt;
 
-    if (Register_IF_ID.recent_instruction.opcode > OPC_INVALID && Register_IF_ID.recent_instruction.opcode <= OPC_MUL) {
-        Register_ID_EX.src = Register_IF_ID.recent_instruction.source;
+    if (Register_IF_ID.recent_instr.opcode > OPC_INVALID && Register_IF_ID.recent_instr.opcode <= OPC_MUL) {
+        Register_ID_EX.src = Register_IF_ID.recent_instr.dest;
         bool hazard_r1 = 0;
         bool hazard_r2 = 0;
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_MEM_WB.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
             Register_ID_EX.r1 = Register_MEM_WB.write_data;
             hazard_r1 = 1;
-        } else if (Register_IF_ID.recent_instruction.operand2 == Register_MEM_WB.src
-                   && Register_IF_ID.recent_instruction.type == 1
+        } else if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.src
+                   && Register_IF_ID.recent_instr.type == 1
                    && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_EX_MEM.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_LDR) {
             fout << Register_EX_MEM.val_arith << endl;
             hazard_r1 = 1;
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.operand2 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instruction.type == 1
+        if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.src
+            && Register_IF_ID.recent_instr.type == 1
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_LDR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_EX_MEM.val_arith;
         }
 
         if (hazard_r1 == 0) {
-            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instruction.operand1];
+            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
         }
 
-        if (Register_IF_ID.recent_instruction.type == 1 && hazard_r2 == 0) {
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instruction.operand2];
-        } else if (Register_IF_ID.recent_instruction.type == 2) {
-            Register_ID_EX.r2 = Register_IF_ID.recent_instruction.operand2;
+        if (Register_IF_ID.recent_instr.type == 1 && hazard_r2 == 0) {
+            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
+        } else if (Register_IF_ID.recent_instr.type == 2) {
+            Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
         }
     }
 
-    if (Register_IF_ID.recent_instruction.opcode == OPC_MOV) {
-        Register_ID_EX.src = Register_IF_ID.recent_instruction.source;
+    if (Register_IF_ID.recent_instr.opcode == OPC_MOV) {
+        Register_ID_EX.src = Register_IF_ID.recent_instr.dest;
         bool hazard = 0;
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_MEM_WB.src
-            && Register_IF_ID.recent_instruction.type == 1
+        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
+            && Register_IF_ID.recent_instr.type == 1
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard = 1;
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instruction.operand2];
+            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
             Register_ID_EX.r1 = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instruction.type == 1
+        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
+            && Register_IF_ID.recent_instr.type == 1
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard = 1;
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instruction.operand2];
+            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.type == 1 && hazard == 0) {
-            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instruction.operand1];
-        } else if (Register_IF_ID.recent_instruction.type == 2 && hazard == 0) {
-            Register_ID_EX.r1 = Register_IF_ID.recent_instruction.operand1;
-        } else if (Register_IF_ID.recent_instruction.type == 3) {
+        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
+        } else if (Register_IF_ID.recent_instr.type == 2 && hazard == 0) {
+            Register_ID_EX.r1 = Register_IF_ID.recent_instr.operand1;
+        } else if (Register_IF_ID.recent_instr.type == 3) {
             if (Register_MEM_WB.src == REG_LR) {
                 Register_ID_EX.r1 = Register_MEM_WB.write_data;
             } else if (Register_EX_MEM.src == REG_LR) {
@@ -145,123 +137,123 @@ void ID() {
         }
     }
 
-    if (Register_IF_ID.recent_instruction.opcode == OPC_LDR) {
-        Register_ID_EX.src = Register_IF_ID.recent_instruction.source;
+    if (Register_IF_ID.recent_instr.opcode == OPC_LDR) {
+        Register_ID_EX.src = Register_IF_ID.recent_instr.dest;
         bool hazard = 0;
         bool hazard_s = 0;
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_MEM_WB.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.address = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_EX_MEM.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.address = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.type == 1 && hazard == 0) {
-            Register_ID_EX.address = reg[Register_IF_ID.recent_instruction.operand1];
-        } else if (Register_IF_ID.recent_instruction.type == 2) {
+        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+            Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
+        } else if (Register_IF_ID.recent_instr.type == 2) {
             if (hazard == 0) {
-                Register_ID_EX.address = reg[Register_IF_ID.recent_instruction.operand1];
+                Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
             }
-            Register_ID_EX.offset = Register_IF_ID.recent_instruction.operand2;
-        } else if (Register_IF_ID.recent_instruction.type == 3) {
-            Register_ID_EX.address = Register_IF_ID.recent_instruction.operand1;
+            Register_ID_EX.offset = Register_IF_ID.recent_instr.operand2;
+        } else if (Register_IF_ID.recent_instr.type == 3) {
+            Register_ID_EX.address = Register_IF_ID.recent_instr.operand1;
         }
     }
 
-    if (Register_IF_ID.recent_instruction.opcode == OPC_STR) {
-        Register_ID_EX.src = reg[Register_IF_ID.recent_instruction.source];
+    if (Register_IF_ID.recent_instr.opcode == OPC_STR) {
+        Register_ID_EX.src = reg[Register_IF_ID.recent_instr.dest];
         bool hazard = 0;
         bool hazard_s = 0;
 
-        if (Register_IF_ID.recent_instruction.source == Register_MEM_WB.src
+        if (Register_IF_ID.recent_instr.dest == Register_MEM_WB.src
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.src = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.source == Register_EX_MEM.src
+        if (Register_IF_ID.recent_instr.dest == Register_EX_MEM.src
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.src = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_MEM_WB.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.address = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_EX_MEM.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.address = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.type == 1 && hazard == 0) {
-            Register_ID_EX.address = reg[Register_IF_ID.recent_instruction.operand1];
-        } else if (Register_IF_ID.recent_instruction.type == 2) {
+        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+            Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
+        } else if (Register_IF_ID.recent_instr.type == 2) {
             if (hazard == 0) {
-                Register_ID_EX.address = reg[Register_IF_ID.recent_instruction.operand1];
+                Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
             }
-            Register_ID_EX.offset = Register_IF_ID.recent_instruction.operand2;
+            Register_ID_EX.offset = Register_IF_ID.recent_instr.operand2;
         }
     }
 
-    if (Register_IF_ID.recent_instruction.opcode >= OPC_CMPBNE &&
-        Register_IF_ID.recent_instruction.opcode <= OPC_CMPBGE) {
+    if (Register_IF_ID.recent_instr.opcode >= OPC_CMPBNE &&
+        Register_IF_ID.recent_instr.opcode <= OPC_CMPBGE) {
         bool hazard_r1 = 0;
         bool hazard_r2 = 0;
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_MEM_WB.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             Register_ID_EX.r1 = Register_MEM_WB.write_data;
             hazard_r1 = 1;
-        } else if (Register_IF_ID.recent_instruction.operand2 == Register_MEM_WB.src
-                   && Register_IF_ID.recent_instruction.type == 1
+        } else if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.src
+                   && Register_IF_ID.recent_instr.type == 1
                    && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_MEM_WB.write_data;
         }
 
-        if (Register_IF_ID.recent_instruction.operand1 == Register_EX_MEM.src
+        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard_r1 = 1;
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instruction.operand2 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instruction.type == 1
+        if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.src
+            && Register_IF_ID.recent_instr.type == 1
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_EX_MEM.val_arith;
         }
 
         if (hazard_r1 == 0) {
-            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instruction.operand1];
+            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
         }
 
-        if (Register_IF_ID.recent_instruction.type == 1 && hazard_r2 == 0) {
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instruction.operand2];
-        } else if (Register_IF_ID.recent_instruction.type == 2) {
-            Register_ID_EX.r2 = Register_IF_ID.recent_instruction.operand2;
+        if (Register_IF_ID.recent_instr.type == 1 && hazard_r2 == 0) {
+            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
+        } else if (Register_IF_ID.recent_instr.type == 2) {
+            Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
         }
 
-        Register_ID_EX.address = Register_IF_ID.recent_instruction.source;
+        Register_ID_EX.address = Register_IF_ID.recent_instr.dest;
     }
 
-    if (Register_IF_ID.recent_instruction.opcode >= OPC_BL && Register_IF_ID.recent_instruction.opcode <= OPC_B) {
-        Register_ID_EX.address = Register_IF_ID.recent_instruction.source;
+    if (Register_IF_ID.recent_instr.opcode >= OPC_BL && Register_IF_ID.recent_instr.opcode <= OPC_B) {
+        Register_ID_EX.address = Register_IF_ID.recent_instr.dest;
     }
 
-    Register_ID_EX.opcode = Register_IF_ID.recent_instruction.opcode;
-    Register_ID_EX.type = Register_IF_ID.recent_instruction.type;
-    fout << ARM_OPC_NAME[Register_IF_ID.recent_instruction.opcode] << endl;
+    Register_ID_EX.opcode = Register_IF_ID.recent_instr.opcode;
+    Register_ID_EX.type = Register_IF_ID.recent_instr.type;
+    fout << ARM_OPC_NAME[Register_IF_ID.recent_instr.opcode] << endl;
 }
 
 void EX() {
@@ -330,8 +322,8 @@ void MEM() {
     if (Register_EX_MEM.opcode == OPC_LDR) {
         if (Register_EX_MEM.type != 3) {
             Register_MEM_WB.write_data = mem[(Register_EX_MEM.val_address) / 4];
-            fout << "mem[" << (Register_EX_MEM.val_address) / 4 << "]=" << mem[(Register_EX_MEM.val_address) / 4]
-                 << endl;
+            fout << "mem[" << (Register_EX_MEM.val_address) / 4 << "]="
+                 << mem[(Register_EX_MEM.val_address) / 4] << endl;
             Register_MEM_WB.src = Register_EX_MEM.src;
         } else {
             Register_MEM_WB.write_data = (Register_EX_MEM.val_address);
@@ -341,8 +333,8 @@ void MEM() {
 
     if (Register_EX_MEM.opcode == OPC_STR) {
         mem[(Register_EX_MEM.val_address) / 4] = Register_EX_MEM.src;
-        fout << "mem[" << Register_EX_MEM.val_address / 4 << "] = " << Register_EX_MEM.src
-             << endl;
+        fout << "mem[" << Register_EX_MEM.val_address / 4 << "] = "
+             << Register_EX_MEM.src << endl;
     }
 
     if (Register_EX_MEM.opcode == OPC_MOV && Register_EX_MEM.type == 3) {
@@ -377,7 +369,7 @@ void WB() {
     } else if (Register_MEM_WB.opcode == OPC_EXIT) {
         shut_down = 1;
     } else if (Register_MEM_WB.opcode == END_OF_FILE) {
-        end_file_inst = 1;
+        file_end = 1;
     }
 
     fout << ARM_OPC_NAME[Register_MEM_WB.opcode] << endl;
@@ -400,7 +392,7 @@ void print_register() {
 }
 
 
-int calcu_latency() {
+int compute_latency() {
     vector<int> latency_pipe(5, 0);
 
     // IF
@@ -440,14 +432,12 @@ int main() {
         return -1;
     }
 
-    prog = -1;
     int instr_num = 0, latency = 0;
 
     fout.open("result.txt");
-
     print_register();
 
-    while (shut_down == 0 && end_file_inst == 0) {
+    while (!shut_down && !file_end) {
         if (Register_MEM_WB.opcode >= OPC_ADD && Register_MEM_WB.opcode <= OPC_B) {
             instr_num++;
         }
@@ -478,14 +468,13 @@ int main() {
         fout << endl;
         print_register();
 
-        latency += calcu_latency();
-        fout << "latency = " << latency << endl << endl << endl;
+        latency += compute_latency();
+
+        fout << "Instr N: " << instr_num << endl;
+        fout << "Latency: " << latency << endl << endl << endl;
     }
 
-    fout << "Instruction: " << instr_num << endl;
-    fout << "Latency: " << latency << endl;
     fout << "CPI: " << float(latency) / float(instr_num) << endl;
-
     fout.close();
 
 }
