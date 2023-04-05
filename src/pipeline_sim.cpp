@@ -1,21 +1,26 @@
 #include "pipeline_sim.h"
 #include "parser.h"
 
+/**
+ * For simplicity, we only use the 16 registers in ARM32.
+ * Memory is 6000 bytes, of which 1000 bytes are reserved for the stack.
+ * Stack pointer is initialized to 1000.
+*/
 int reg[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0};
 int mem[6000];
 
 vector<Instruction> instructions;
 vector<int> latencies(12, 0);
 
+ofstream fout;
 int prog = 0;
 int PC_src = 0;
 int shut_down = 0;
 int file_end = 0;
 
-ofstream fout;
-
 
 // ====================== PIPELINE STAGES ======================
+
 IF_ID Register_IF_ID;
 ID_EX Register_ID_EX;
 EX_MEM Register_EX_MEM;
@@ -26,11 +31,14 @@ void flush() {
     Register_IF_ID.recent_instr.opcode = OPC_INVALID;
     Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
     Register_ID_EX.opcode = OPC_INVALID;
-    Register_ID_EX.type = -1;
+    Register_ID_EX.type = INSTR_TYPE_INVALID;
     Register_EX_MEM.opcode = OPC_INVALID;
-    Register_EX_MEM.type = -1;
+    Register_EX_MEM.type = INSTR_TYPE_INVALID;
 }
 
+/**
+ * Fetch
+*/
 void IF() {
     if (PC_src == 0) {
         if (prog >= instructions.size()) {
@@ -59,6 +67,9 @@ void IF() {
     }
 }
 
+/**
+ * Decode
+*/
 void ID() {
     Register_ID_EX.prog_cnt = Register_IF_ID.prog_cnt;
 
@@ -72,7 +83,7 @@ void ID() {
             Register_ID_EX.r1 = Register_MEM_WB.write_data;
             hazard_r1 = 1;
         } else if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.src
-                   && Register_IF_ID.recent_instr.type == 1
+                   && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
                    && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_MEM_WB.write_data;
@@ -86,7 +97,7 @@ void ID() {
         }
 
         if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instr.type == 1
+            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_LDR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_EX_MEM.val_arith;
@@ -96,9 +107,9 @@ void ID() {
             Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
         }
 
-        if (Register_IF_ID.recent_instr.type == 1 && hazard_r2 == 0) {
+        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG && hazard_r2 == 0) {
             Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
-        } else if (Register_IF_ID.recent_instr.type == 2) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
             Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
         }
     }
@@ -108,7 +119,7 @@ void ID() {
         bool hazard = 0;
 
         if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.src
-            && Register_IF_ID.recent_instr.type == 1
+            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
@@ -116,18 +127,18 @@ void ID() {
         }
 
         if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instr.type == 1
+            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard = 1;
             Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG && hazard == 0) {
             Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
-        } else if (Register_IF_ID.recent_instr.type == 2 && hazard == 0) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM && hazard == 0) {
             Register_ID_EX.r1 = Register_IF_ID.recent_instr.operand1;
-        } else if (Register_IF_ID.recent_instr.type == 3) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_EXTRA) {
             if (Register_MEM_WB.src == REG_LR) {
                 Register_ID_EX.r1 = Register_MEM_WB.write_data;
             } else if (Register_EX_MEM.src == REG_LR) {
@@ -154,14 +165,14 @@ void ID() {
             Register_ID_EX.address = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG && hazard == 0) {
             Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
-        } else if (Register_IF_ID.recent_instr.type == 2) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
             if (hazard == 0) {
                 Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
             }
             Register_ID_EX.offset = Register_IF_ID.recent_instr.operand2;
-        } else if (Register_IF_ID.recent_instr.type == 3) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_EXTRA) {
             Register_ID_EX.address = Register_IF_ID.recent_instr.operand1;
         }
     }
@@ -195,9 +206,9 @@ void ID() {
             Register_ID_EX.address = Register_EX_MEM.val_arith;
         }
 
-        if (Register_IF_ID.recent_instr.type == 1 && hazard == 0) {
+        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG && hazard == 0) {
             Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
-        } else if (Register_IF_ID.recent_instr.type == 2) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
             if (hazard == 0) {
                 Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
             }
@@ -215,7 +226,7 @@ void ID() {
             Register_ID_EX.r1 = Register_MEM_WB.write_data;
             hazard_r1 = 1;
         } else if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.src
-                   && Register_IF_ID.recent_instr.type == 1
+                   && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
                    && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_STR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_MEM_WB.write_data;
@@ -228,7 +239,7 @@ void ID() {
         }
 
         if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.src
-            && Register_IF_ID.recent_instr.type == 1
+            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_STR) {
             hazard_r2 = 1;
             Register_ID_EX.r2 = Register_EX_MEM.val_arith;
@@ -238,9 +249,9 @@ void ID() {
             Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
         }
 
-        if (Register_IF_ID.recent_instr.type == 1 && hazard_r2 == 0) {
+        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG && hazard_r2 == 0) {
             Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
-        } else if (Register_IF_ID.recent_instr.type == 2) {
+        } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
             Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
         }
 
@@ -256,6 +267,9 @@ void ID() {
     fout << ARM_OPC_NAME[Register_IF_ID.recent_instr.opcode] << endl;
 }
 
+/**
+ * Execute
+*/
 void EX() {
     Register_EX_MEM.prog_cnt = Register_ID_EX.prog_cnt;
 
@@ -282,7 +296,7 @@ void EX() {
         }
 
         if (Register_ID_EX.opcode >= OPC_LDR && Register_ID_EX.opcode <= OPC_STR) {
-            if (Register_ID_EX.type == 2) {
+            if (Register_ID_EX.type == INSTR_TYPE_IMM) {
                 Register_EX_MEM.val_address = Register_ID_EX.address + Register_ID_EX.offset;
             } else {
                 Register_EX_MEM.val_address = Register_ID_EX.address;
@@ -311,6 +325,9 @@ void EX() {
     fout << ARM_OPC_NAME[Register_ID_EX.opcode] << endl;
 }
 
+/**
+ * Memory
+*/
 void MEM() {
     Register_MEM_WB.prog_cnt = Register_EX_MEM.prog_cnt;
 
@@ -320,7 +337,7 @@ void MEM() {
     }
 
     if (Register_EX_MEM.opcode == OPC_LDR) {
-        if (Register_EX_MEM.type != 3) {
+        if (Register_EX_MEM.type != INSTR_TYPE_EXTRA) {
             Register_MEM_WB.write_data = mem[(Register_EX_MEM.val_address) / 4];
             fout << "mem[" << (Register_EX_MEM.val_address) / 4 << "]="
                  << mem[(Register_EX_MEM.val_address) / 4] << endl;
@@ -337,7 +354,7 @@ void MEM() {
              << Register_EX_MEM.src << endl;
     }
 
-    if (Register_EX_MEM.opcode == OPC_MOV && Register_EX_MEM.type == 3) {
+    if (Register_EX_MEM.opcode == OPC_MOV && Register_EX_MEM.type == INSTR_TYPE_EXTRA) {
         Register_EX_MEM.val_address = Register_EX_MEM.val_arith;
         PC_src = 1;
     }
@@ -363,6 +380,9 @@ void MEM() {
     fout << ARM_OPC_NAME[Register_EX_MEM.opcode] << endl;
 }
 
+/**
+ * Writeback
+*/
 void WB() {
     if (Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
         reg[Register_MEM_WB.src] = Register_MEM_WB.write_data;
@@ -374,6 +394,7 @@ void WB() {
 
     fout << ARM_OPC_NAME[Register_MEM_WB.opcode] << endl;
 }
+
 // ====================== PIPELINE STAGES ======================
 
 
@@ -391,7 +412,6 @@ void print_register() {
     fout << endl;
 }
 
-
 int compute_latency() {
     vector<int> latency_pipe(5, 0);
 
@@ -402,7 +422,7 @@ int compute_latency() {
     // EX
     if (Register_ID_EX.opcode > OPC_INVALID && Register_ID_EX.opcode <= OPC_MOV) {
         latency_pipe[2] = latencies[Register_ID_EX.opcode - 1];
-    } else if (Register_ID_EX.opcode == OPC_LDR && Register_ID_EX.type == 3) {
+    } else if (Register_ID_EX.opcode == OPC_LDR && Register_ID_EX.type == INSTR_TYPE_EXTRA) {
         latency_pipe[2] = latencies[5];
     } else if (Register_ID_EX.opcode >= OPC_CMPBNE && Register_ID_EX.opcode <= OPC_CMPBGE) {
         latency_pipe[2] = latencies[7];
@@ -424,7 +444,6 @@ int compute_latency() {
 
     return *max_element(latency_pipe.begin(), latency_pipe.end());
 }
-
 
 int main() {
 

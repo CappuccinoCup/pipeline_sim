@@ -2,6 +2,12 @@
 
 // ====================== LATENCY PARSING ======================
 
+/**
+ * Get the latency for each instruction from vector "lexeme",
+ *   and put it to the right position of vector "latencies".
+ * If there is an instruction that does not find the corresponding latency, 
+ *   return an error.
+*/
 int parse_latency(vector<string> &lexeme, vector<int> &latencies) {
     int error = 0;
 
@@ -29,6 +35,9 @@ int parse_latency(vector<string> &lexeme, vector<int> &latencies) {
     return error;
 }
 
+/**
+ * Read the latency file and get the latency of each instruction.
+*/
 int read_latency(vector<int> &latencies) {
     vector<string> lexeme;
     string s;
@@ -69,7 +78,7 @@ int read_latency(vector<int> &latencies) {
 /**
  * Classify no-label instructions, including:
  * [add, sub, mul, mov, ldr, str]
- * Return the format type of the instruction
+ * Return the detail type of the instruction opcode.
 */
 ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
     string lex_lower = lexeme[curr_lex];
@@ -232,7 +241,7 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
 /**
  * Classify compare instructions, including:
  * [cmp & bne, cmp & bge]
- * Return the format type of the instruction
+ * Return the detail type of the instruction opcode.
 */
 ARM_OPC_TYPE classify_cmp(vector<string> &lexeme, int curr_lex) {
     string lex_lower = lexeme[curr_lex + 4];
@@ -268,11 +277,18 @@ ARM_OPC_TYPE classify_cmp(vector<string> &lexeme, int curr_lex) {
     return OPC_TYPE_INVALID;
 }
 
+/**
+ * Get the instructions from vector "lexeme",
+ *   and put them to the vector "instructions".
+ * If there is an instruction that does not match the correct format, 
+ *   return an error.
+*/
 int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) {
     int error = 0;
     int lex_idx = 0;
 
     int freemem = 5000;
+
     vector<symbol> symbol_table;
     vector<symbol> symbol_temps;
 
@@ -291,6 +307,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
             } else {
                 Instruction I;
                 symbol sym;
+
                 switch (opc_type) {
                     case OPC_TYPE_ADD_REG:
                         I.opcode = OPC_ADD;
@@ -451,6 +468,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                         cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
                         break;
                 }
+
                 if (I.opcode != OPC_INVALID) {
                     instructions.push_back(I);
                 }
@@ -469,6 +487,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
             } else {
                 Instruction I;
                 symbol sym;
+
                 switch (opc_type) {
                     case OPC_TYPE_CMP_BNE_REG:
                         I.opcode = OPC_CMPBNE;
@@ -518,6 +537,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                         cout << "Error in " << lexeme[lex_idx] << " instruction" << endl;
                         break;
                 }
+
                 if (I.opcode != OPC_INVALID) {
                     instructions.push_back(I);
                 }
@@ -529,16 +549,19 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
         if (lex_lower == "bl" || lex_lower == "b") {
             Instruction I;
             symbol sym;
+
             if (lex_lower == "bl") {
                 I.opcode = OPC_BL;
             }
             if (lex_lower == "b") {
                 I.opcode = OPC_B;
             }
+
             sym.type = SYMBOL_JMP_LABEL;
             sym.name = lexeme[lex_idx + 1];
             sym.pos = instructions.size();
             symbol_temps.push_back(sym);
+
             lex_idx += 2;
             instructions.push_back(I);
             continue;
@@ -546,6 +569,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
 
         if (lex_lower == ":") {
             symbol sym;
+
             sym.name = lexeme[lex_idx - 1];
             if (lexeme[lex_idx + 1] == ".space") {
                 sym.type = SYMBOL_DATA_LABEL;
@@ -556,6 +580,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                 sym.pos = instructions.size();
             }
             symbol_table.push_back(sym);
+
             lex_idx++;
             continue;
         }
@@ -571,6 +596,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
         lex_idx++;
     }
 
+    // Parse symbols
     for (auto &tmp: symbol_temps) {
         for (auto &sym: symbol_table) {
             if (tmp.name == sym.name) {
@@ -586,6 +612,9 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
     return error;
 }
 
+/**
+ * Read the instruction file and get the instruction flow.
+*/
 int read_instruction(vector<Instruction> &instructions) {
     vector<string> lexeme;
     string s;
@@ -625,7 +654,9 @@ int read_instruction(vector<Instruction> &instructions) {
 
 // ==================== INSTRUCTION PARSING ====================
 
-
+/**
+ * Read and parse latency file & instruction file.
+*/
 int parse_file(vector<int> &latencies, vector<Instruction> &instructions) {
     int err = 0;
     err += read_latency(latencies);

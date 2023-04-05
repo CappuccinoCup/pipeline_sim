@@ -4,6 +4,7 @@
 #include <iostream>
 #include <bits/stdc++.h>
 #include <string>
+
 #include "arm_instr.h"
 
 using namespace std;
@@ -20,8 +21,9 @@ struct ID_EX {
     int address;
     int offset;
     int prog_cnt;
+    // Instruction
     ARM_OPC opcode = OPC_INVALID;
-    int type;
+    ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
 
 struct EX_MEM {
@@ -30,16 +32,18 @@ struct EX_MEM {
     int src;
     bool zero;
     int prog_cnt;
+    // Instruction
     ARM_OPC opcode = OPC_INVALID;
-    int type;
+    ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
 
 struct MEM_WB {
     int write_data;
     int src;
     int prog_cnt;
+    // Instruction
     ARM_OPC opcode = OPC_INVALID;
-    int type;
+    ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
 
 #endif // PIPELINE_SIM_H
