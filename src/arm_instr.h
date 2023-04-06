@@ -28,7 +28,7 @@ static const string ARM_OPC_NAME[14] = {
         "ldr", "str",
         "cmp & bne", "cmp & bge",
         "bl", "b",
-        "exit", "end of file", "bubble"
+        "exit", "", "bubble"
 };
 
 typedef enum {
@@ -36,7 +36,7 @@ typedef enum {
     OPC_TYPE_ADD_REG, OPC_TYPE_ADD_IMM, OPC_TYPE_ADD_SP_IMM,
     OPC_TYPE_SUB_REG, OPC_TYPE_SUB_IMM, OPC_TYPE_SUB_SP_IMM,
     OPC_TYPE_MUL_REG, OPC_TYPE_MUL_IMM,
-    OPC_TYPE_MOV_REG, OPC_TYPE_MOV_PC_LR, OPC_TYPE_MOV_IMM,
+    OPC_TYPE_MOV_REG, OPC_TYPE_MOV_IMM, OPC_TYPE_MOV_PC_LR,
     OPC_TYPE_LDR_LABEL, OPC_TYPE_LDR_REG, OPC_TYPE_LDR_REG_OFFSET,
     OPC_TYPE_LDR_SP_OFFSET, OPC_TYPE_LDR_LR_SP_OFFSET,
     OPC_TYPE_STR_REG, OPC_TYPE_STR_REG_OFFSET,

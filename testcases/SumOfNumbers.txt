@@ -5,17 +5,17 @@
 @ r2 			- Integers (in this case, starting from 1 to 100)
 @ r1 			- Loop counter (in this case, going from 100 to 1)
 
-	mov r1,	#100		@Moves constant 100 to register r1
-	mov r2, #1
-	ldr r3, =AA		    @Loads address of label AA in register r3
+0x000:  mov r1,	#100		@Moves constant 100 to register r1
+0x004:  mov r2, #1
+0x008:  ldr r3, =AA		    @Loads address of label AA in register r3
 
 StoreIntegers:
-	str r2, [r3]		@ Stores the value of register r2 to address stored in register r3
-	add r3, r3, #4	 	@ Update Destination Address(4 bytes)
-	add r2, r2, #1 		@ Update Integer value (add 1)
-	sub r1, r1, #1 		@ Update Loop counter (sub 1)
-	cmp r1, #0 	        @ Compare Loop counter with 0
-	bne StoreIntegers	@ If Loop counter != 0, keep looping
+0x00c:  str r2, [r3]		@ Stores the value of register r2 to address stored in register r3
+0x010:  add r3, r3, #4	 	@ Update Destination Address(4 bytes)
+0x014:  add r2, r2, #1 		@ Update Integer value (add 1)
+0x018:  sub r1, r1, #1 		@ Update Loop counter (sub 1)
+0x01c:  cmp r1, #0 	        @ Compare Loop counter with 0
+        bne StoreIntegers	@ If Loop counter != 0, keep looping
 
 @LoadAddIntegers- Loads integers (in this case, 1 to 100) from a source Address and sums them up.
 @ r4 			- Sum register
@@ -23,19 +23,19 @@ StoreIntegers:
 @ r2 			- Integers (in this case, starting from 1 to 100)
 @ r1 			- Loop counter (in this case, going from 100 to 1)
 
-	mov r1, #100
-	mov r4, #0
-	ldr r3, =AA
+0x020:  mov r1, #100
+0x024:  mov r4, #0
+0x028:  ldr r3, =AA
 
 LoadAddIntegers:
-	ldr r2, [r3]     	@ Loads integers from address stored in register r3 to register r2
-	add r4, r4, r2      @ Update Sum (= Previous sum + current value)
-	add r3, r3, #4   	@ Update Source Address (4 bytes) 
-	sub r1, r1, #1   	@ Update Loop counter (sub 1)
-	cmp r1, #0        	@ Compare Loop counter with 0
-	bne LoadAddIntegers	@ If Loop counter != 0, keep looping 
+0x02c:  ldr r2, [r3]     	@ Loads integers from address stored in register r3 to register r2
+0x030:  add r4, r4, r2      @ Update Sum (= Previous sum + current value)
+0x034:  add r3, r3, #4   	@ Update Source Address (4 bytes) 
+0x038:  sub r1, r1, #1   	@ Update Loop counter (sub 1)
+0x03c:  cmp r1, #0        	@ Compare Loop counter with 0
+	    bne LoadAddIntegers	@ If Loop counter != 0, keep looping 
 
-	Exit		        @ Stops the program
+0x040:  Exit		        @ Stops the program
 
 	.data				@ Do a memory allocation for 400 words (each 4 bytes)
 AA:

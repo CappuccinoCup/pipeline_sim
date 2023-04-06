@@ -287,7 +287,7 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
     int error = 0;
     int lex_idx = 0;
 
-    int freemem = 5000;
+    int mem_alloc = 0;
 
     vector<symbol> symbol_table;
     vector<symbol> symbol_temps;
@@ -573,8 +573,8 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
             sym.name = lexeme[lex_idx - 1];
             if (lexeme[lex_idx + 1] == ".space") {
                 sym.type = SYMBOL_DATA_LABEL;
-                sym.pos = freemem;
-                freemem = freemem + stoi(lexeme[lex_idx + 2]);
+                sym.pos = mem_alloc;
+                mem_alloc = mem_alloc + stoi(lexeme[lex_idx + 2]);
             } else {
                 sym.type = SYMBOL_JMP_LABEL;
                 sym.pos = instructions.size();

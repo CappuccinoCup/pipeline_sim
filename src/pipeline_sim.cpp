@@ -2,21 +2,21 @@
 #include "parser.h"
 
 /**
- * For simplicity, we only use the 16 registers in ARM32.
- * Memory is 6000 bytes, of which 1000 bytes are reserved for the stack.
- * Stack pointer is initialized to 1000.
+ * For simplicity, we only use the 16 registers in ARM 32.
+ * Memory is 6000 bytes, of which 1000 bytes are reserved.
+ * So, stack pointer (reg[REG_SP]) is initialized to 5000.
 */
-int reg[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 0, 0};
+int reg[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5000, 0, 0};
 int mem[6000];
 
 vector<Instruction> instructions;
 vector<int> latencies(12, 0);
 
-ofstream fout;
-int prog = 0;
 int PC_src = 0;
 int shut_down = 0;
 int file_end = 0;
+
+ofstream fout;
 
 
 // ====================== PIPELINE STAGES ======================
@@ -27,7 +27,7 @@ EX_MEM Register_EX_MEM;
 MEM_WB Register_MEM_WB;
 
 void flush() {
-    prog = Register_EX_MEM.val_address;
+    reg[REG_PC] = Register_EX_MEM.val_address * 4;
     Register_IF_ID.recent_instr.opcode = OPC_INVALID;
     Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
     Register_ID_EX.opcode = OPC_INVALID;
@@ -41,25 +41,24 @@ void flush() {
 */
 void IF() {
     if (PC_src == 0) {
-        if (prog >= instructions.size()) {
+        if ((reg[REG_PC] / 4) >= instructions.size()) {
             Instruction end_file;
             end_file.opcode = END_OF_FILE;
             Register_IF_ID.recent_instr = end_file;
-            Register_IF_ID.prog_cnt = prog;
-            prog++;
-        } else if ((Register_IF_ID.recent_instr.dest == instructions[prog].operand1
-                    || Register_IF_ID.recent_instr.dest == instructions[prog].operand2)
+            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
+        } else if ((Register_IF_ID.recent_instr.dest == instructions[reg[REG_PC] / 4].operand1
+                    || Register_IF_ID.recent_instr.dest == instructions[reg[REG_PC] / 4].operand2)
                    && Register_IF_ID.recent_instr.opcode == OPC_LDR) {
             fout << "stall" << endl;
             Instruction bubble;
             bubble.opcode = BUBBLE;
             Register_IF_ID.recent_instr = bubble;
-            Register_IF_ID.prog_cnt = prog;
+            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
         } else {
-            Register_IF_ID.recent_instr = instructions[prog];
-            Register_IF_ID.prog_cnt = prog;
-            fout << ARM_OPC_NAME[instructions[prog].opcode] << endl;
-            prog++;
+            Register_IF_ID.recent_instr = instructions[reg[REG_PC] / 4];
+            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
+            fout << ARM_OPC_NAME[instructions[reg[REG_PC] / 4].opcode] << endl;
+            reg[REG_PC] += 4;
         }
     } else {
         flush();
@@ -391,7 +390,6 @@ void WB() {
     } else if (Register_MEM_WB.opcode == END_OF_FILE) {
         file_end = 1;
     }
-
     fout << ARM_OPC_NAME[Register_MEM_WB.opcode] << endl;
 }
 
@@ -401,11 +399,15 @@ void WB() {
 void print_register() {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            char reg_str[10];
-            char eq_str[10];
-            sprintf(reg_str, "reg[%d]", 4 * i + j);
-            sprintf(eq_str, "= %d", reg[4 * i + j]);
-            fout << left << setw(10) << reg_str << setw(10) << eq_str << "\t";
+            int num = 4 * i + j;
+            char reg_str[10], eq_str[10];
+            sprintf(reg_str, "reg[%d]", num);
+            if (num != REG_PC) {
+                sprintf(eq_str, "= %d", reg[num]);
+            } else {
+                sprintf(eq_str, "= 0x%x", reg[REG_PC]);
+            }
+            fout << left << setw(10) << reg_str << setw(12) << eq_str << "\t";
         }
         fout << endl;
     }
@@ -414,7 +416,6 @@ void print_register() {
 
 int compute_latency() {
     vector<int> latency_pipe(5, 0);
-
     // IF
     latency_pipe[0] = 1;
     // ID
@@ -441,7 +442,6 @@ int compute_latency() {
     }
     // WB
     latency_pipe[4] = 1;
-
     return *max_element(latency_pipe.begin(), latency_pipe.end());
 }
 

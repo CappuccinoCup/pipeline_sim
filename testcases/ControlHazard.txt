@@ -1,14 +1,14 @@
 main:
-    mov r1, #3
-    mov r3, #2
+0x000:  mov r1, #3
+0x004:  mov r3, #2
 l1:
-    sub r1, r1, #1
-    cmp r1, #0
-    bge l1
-    bl  l2
-    mov r2, #3
-    add r2, r2, #5
-    sub r3, r2, #2
+0x008:  sub r1, r1, #1
+0x00c:  cmp r1, #0
+        bge l1
+0x010:  bl  l2
+0x014:  mov r2, #3
+0x018:  add r2, r2, #5
+0x01c:  sub r3, r2, #2
 l2:
-    mov r7, r3
-    Exit
+0x020:  mov r7, r3
+0x024:  Exit

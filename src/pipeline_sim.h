@@ -11,7 +11,7 @@ using namespace std;
 
 struct IF_ID {
     Instruction recent_instr;
-    int prog_cnt = -1;
+    int prog_cnt;
 };
 
 struct ID_EX {

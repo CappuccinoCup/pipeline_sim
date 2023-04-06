@@ -1,8 +1,8 @@
 main:
-    mov r10, #5
-    mov r9, #6
-    str r10, [r9,#0]
-    ldr r1, [r10,#4]
-    add r2, r1, #2
-    mul r3, r1, #2
-    Exit
+0x000:  mov r10, #5
+0x004:  mov r9, #6
+0x008:  str r10, [r9,#0]
+0x00c:  ldr r1, [r10,#4]
+0x010:  add r2, r1, #2
+0x014:  mul r3, r1, #2
+0x018:  Exit

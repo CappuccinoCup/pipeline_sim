@@ -50,8 +50,8 @@ It's your work to complete the pipeline simulator.
 7. mul rd, reg1, reg2
 8. mul rd, reg1, #imm
 9. mov rd, reg1
-10. mov pc, lr
-11. mov rd, #imm
+10. mov rd, #imm
+11. mov pc, lr
 12. ldr rd, =label
 13. ldr rd, [reg1]
 14. ldr rd, [reg1, #imm]
