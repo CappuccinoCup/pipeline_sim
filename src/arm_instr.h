@@ -6,11 +6,11 @@
 using namespace std;
 
 typedef enum {
-    REG_INVALID = -1,
-    REG_R0, REG_R1, REG_R2, REG_R3,
-    REG_R4, REG_R5, REG_R6, REG_R7,
-    REG_R8, REG_R9, REG_R10, REG_R11,
-    REG_R12, REG_SP, REG_LR, REG_PC
+    ARM_REG_INVALID = -1,
+    ARM_REG_R0, ARM_REG_R1, ARM_REG_R2, ARM_REG_R3,
+    ARM_REG_R4, ARM_REG_R5, ARM_REG_R6, ARM_REG_R7,
+    ARM_REG_R8, ARM_REG_R9, ARM_REG_R10, ARM_REG_R11,
+    ARM_REG_R12, ARM_REG_SP, ARM_REG_LR, ARM_REG_PC
 } ARM_REG;
 
 typedef enum {

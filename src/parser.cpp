@@ -88,10 +88,10 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // add xx, xxx, ...
         if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
             // add rd, reg1, ...
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < ARM_REG_SP) {
                 // 1. add rd, reg1, reg2
-                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < ARM_REG_SP) {
                     return OPC_TYPE_ADD_REG;
                 }
                 // 2. add rd, reg1, #imm
@@ -111,10 +111,10 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // sub xx, xxx, ...
         if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
             // sub rd, reg1, ...
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < ARM_REG_SP) {
                 // 4. sub rd, reg1, reg2
-                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < ARM_REG_SP) {
                     return OPC_TYPE_SUB_REG;
                 }
                 // 5. sub rd, reg1, #imm
@@ -134,10 +134,10 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // mul xx, xxx, ...
         if (lexeme[curr_lex + 2] == "," && lexeme[curr_lex + 4] == ",") {
             // mul rd, reg1, ...
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < ARM_REG_SP) {
                 // 7. mul rd, reg1, reg2
-                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < REG_SP) {
+                if (lexeme[curr_lex + 5][0] == 'r' && stoi(lexeme[curr_lex + 5].substr(1)) < ARM_REG_SP) {
                     return OPC_TYPE_MUL_REG;
                 }
                 // 8. mul rd, reg1, #imm
@@ -152,8 +152,8 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // mov xx, ...
         if (lexeme[curr_lex + 2] == ",") {
             // 9. mov rd, reg1
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                && lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < ARM_REG_SP) {
                 return OPC_TYPE_MOV_REG;
             }
             // 10. mov pc, lr
@@ -161,7 +161,7 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
                 return OPC_TYPE_MOV_PC_LR;
             }
             // 11. mov rd, #imm
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                 && lexeme[curr_lex + 3][0] == '#') {
                 return OPC_TYPE_MOV_IMM;
             }
@@ -172,26 +172,26 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // ldr xx, ...
         if (lexeme[curr_lex + 2] == ",") {
             // 12. ldr rd, =label
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                 && lexeme[curr_lex + 3][0] == '=') {
                 return OPC_TYPE_LDR_LABEL;
             }
             // 13. ldr rd, [reg1]
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                 && lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]"
-                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
+                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < ARM_REG_SP) {
                 return OPC_TYPE_LDR_REG;
             }
             // ldr xx, [xxx, xxx] ...
             if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "," && lexeme[curr_lex + 7] == "]") {
                 // 14. ldr rd, [reg1, #imm]
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < ARM_REG_SP
                     && lexeme[curr_lex + 6][0] == '#') {
                     return OPC_TYPE_LDR_REG_OFFSET;
                 }
                 // 15. ldr rd, [sp, #imm]
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                     && lexeme[curr_lex + 4] == "sp" && lexeme[curr_lex + 6][0] == '#') {
                     return OPC_TYPE_LDR_SP_OFFSET;
                 }
@@ -208,21 +208,21 @@ ARM_OPC_TYPE classify_no_label(vector<string> &lexeme, int curr_lex) {
         // str xx, ...
         if (lexeme[curr_lex + 2] == ",") {
             // 17. str rd, [reg1]
-            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+            if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                 && lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "]"
-                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP) {
+                && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < ARM_REG_SP) {
                 return OPC_TYPE_STR_REG;
             }
             // str xx, [xxx, xxx] ...
             if (lexeme[curr_lex + 3] == "[" && lexeme[curr_lex + 5] == "," && lexeme[curr_lex + 7] == "]") {
                 // 18. str rd, [reg1, #imm]
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
-                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < REG_SP
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
+                    && lexeme[curr_lex + 4][0] == 'r' && stoi(lexeme[curr_lex + 4].substr(1)) < ARM_REG_SP
                     && lexeme[curr_lex + 6][0] == '#') {
                     return OPC_TYPE_STR_REG_OFFSET;
                 }
                 // 19. str rd, [sp, #imm]
-                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP
+                if (lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP
                     && lexeme[curr_lex + 4] == "sp" && lexeme[curr_lex + 6][0] == '#') {
                     return OPC_TYPE_STR_SP_OFFSET;
                 }
@@ -249,9 +249,9 @@ ARM_OPC_TYPE classify_cmp(vector<string> &lexeme, int curr_lex) {
 
     // cmp reg1, xxx bne/bge ...
     if (lex_lower == "bne" || lex_lower == "bge" && lexeme[curr_lex + 2] == ","
-                              && lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < REG_SP) {
+                              && lexeme[curr_lex + 1][0] == 'r' && stoi(lexeme[curr_lex + 1].substr(1)) < ARM_REG_SP) {
         // cmp reg1, reg2 bne/bge ...
-        if (lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < REG_SP) {
+        if (lexeme[curr_lex + 3][0] == 'r' && stoi(lexeme[curr_lex + 3].substr(1)) < ARM_REG_SP) {
             // 21. cmp reg1, reg2 bne label
             if (lex_lower == "bne") {
                 return OPC_TYPE_CMP_BNE_REG;
@@ -327,8 +327,8 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                         break;
                     case OPC_TYPE_ADD_SP_IMM:
                         I.opcode = OPC_ADD;
-                        I.dest = REG_SP;
-                        I.operand1 = REG_SP;
+                        I.dest = ARM_REG_SP;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 6;
@@ -351,8 +351,8 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                         break;
                     case OPC_TYPE_SUB_SP_IMM:
                         I.opcode = OPC_SUB;
-                        I.dest = REG_SP;
-                        I.operand1 = REG_SP;
+                        I.dest = ARM_REG_SP;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 5].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 6;
@@ -420,15 +420,15 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                     case OPC_TYPE_LDR_SP_OFFSET:
                         I.opcode = OPC_LDR;
                         I.dest = stoi(lexeme[lex_idx + 1].substr(1));
-                        I.operand1 = REG_SP;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 8;
                         break;
                     case OPC_TYPE_LDR_LR_SP_OFFSET:
                         I.opcode = OPC_LDR;
-                        I.dest = REG_LR;
-                        I.operand1 = REG_SP;
+                        I.dest = ARM_REG_LR;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 8;
@@ -451,15 +451,15 @@ int parse_instruction(vector<string> lexeme, vector<Instruction> &instructions) 
                     case OPC_TYPE_STR_SP_OFFSET:
                         I.opcode = OPC_STR;
                         I.dest = stoi(lexeme[lex_idx + 1].substr(1));
-                        I.operand1 = REG_SP;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 8;
                         break;
                     case OPC_TYPE_STR_LR_SP_OFFSET:
                         I.opcode = OPC_STR;
-                        I.dest = REG_LR;
-                        I.operand1 = REG_SP;
+                        I.dest = ARM_REG_LR;
+                        I.operand1 = ARM_REG_SP;
                         I.operand2 = stoi(lexeme[lex_idx + 6].substr(1));
                         I.type = INSTR_TYPE_IMM;
                         lex_idx += 8;

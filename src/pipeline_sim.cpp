@@ -4,7 +4,7 @@
 /**
  * For simplicity, we only use the 16 registers in ARM 32.
  * Memory is 6000 bytes, of which 1000 bytes are reserved.
- * So, stack pointer (reg[REG_SP]) is initialized to 5000.
+ * Stack pointer (reg[ARM_REG_SP]) is initialized to 5000.
 */
 int reg[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5000, 0, 0};
 int mem[6000];
@@ -27,7 +27,7 @@ EX_MEM Register_EX_MEM;
 MEM_WB Register_MEM_WB;
 
 void flush() {
-    reg[REG_PC] = Register_EX_MEM.val_address * 4;
+    reg[ARM_REG_PC] = Register_EX_MEM.val_address * 4;
     Register_IF_ID.recent_instr.opcode = OPC_INVALID;
     Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
     Register_ID_EX.opcode = OPC_INVALID;
@@ -41,24 +41,24 @@ void flush() {
 */
 void IF() {
     if (PC_src == 0) {
-        if ((reg[REG_PC] / 4) >= instructions.size()) {
+        if ((reg[ARM_REG_PC] / 4) >= instructions.size()) {
             Instruction end_file;
             end_file.opcode = END_OF_FILE;
             Register_IF_ID.recent_instr = end_file;
-            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
-        } else if ((Register_IF_ID.recent_instr.dest == instructions[reg[REG_PC] / 4].operand1
-                    || Register_IF_ID.recent_instr.dest == instructions[reg[REG_PC] / 4].operand2)
+            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
+        } else if ((Register_IF_ID.recent_instr.dest == instructions[reg[ARM_REG_PC] / 4].operand1
+                    || Register_IF_ID.recent_instr.dest == instructions[reg[ARM_REG_PC] / 4].operand2)
                    && Register_IF_ID.recent_instr.opcode == OPC_LDR) {
             fout << "stall" << endl;
             Instruction bubble;
             bubble.opcode = BUBBLE;
             Register_IF_ID.recent_instr = bubble;
-            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
+            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
         } else {
-            Register_IF_ID.recent_instr = instructions[reg[REG_PC] / 4];
-            Register_IF_ID.prog_cnt = reg[REG_PC] / 4;
-            fout << ARM_OPC_NAME[instructions[reg[REG_PC] / 4].opcode] << endl;
-            reg[REG_PC] += 4;
+            Register_IF_ID.recent_instr = instructions[reg[ARM_REG_PC] / 4];
+            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
+            fout << ARM_OPC_NAME[instructions[reg[ARM_REG_PC] / 4].opcode] << endl;
+            reg[ARM_REG_PC] += 4;
         }
     } else {
         flush();
@@ -138,12 +138,12 @@ void ID() {
         } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM && hazard == 0) {
             Register_ID_EX.r1 = Register_IF_ID.recent_instr.operand1;
         } else if (Register_IF_ID.recent_instr.type == INSTR_TYPE_EXTRA) {
-            if (Register_MEM_WB.src == REG_LR) {
+            if (Register_MEM_WB.src == ARM_REG_LR) {
                 Register_ID_EX.r1 = Register_MEM_WB.write_data;
-            } else if (Register_EX_MEM.src == REG_LR) {
+            } else if (Register_EX_MEM.src == ARM_REG_LR) {
                 Register_ID_EX.r1 = Register_EX_MEM.val_arith;
             } else
-                Register_ID_EX.r1 = reg[REG_LR];
+                Register_ID_EX.r1 = reg[ARM_REG_LR];
         }
     }
 
@@ -364,7 +364,7 @@ void MEM() {
     }
 
     if (Register_EX_MEM.opcode == OPC_BL) {
-        reg[REG_LR] = Register_EX_MEM.prog_cnt + 1;
+        reg[ARM_REG_LR] = Register_EX_MEM.prog_cnt + 1;
         PC_src = 1;
         Register_EX_MEM.zero == 0;
     }
@@ -402,10 +402,10 @@ void print_register() {
             int num = 4 * i + j;
             char reg_str[10], eq_str[10];
             sprintf(reg_str, "reg[%d]", num);
-            if (num != REG_PC) {
+            if (num != ARM_REG_PC) {
                 sprintf(eq_str, "= %d", reg[num]);
             } else {
-                sprintf(eq_str, "= 0x%x", reg[REG_PC]);
+                sprintf(eq_str, "= 0x%x", reg[ARM_REG_PC]);
             }
             fout << left << setw(10) << reg_str << setw(12) << eq_str << "\t";
         }
