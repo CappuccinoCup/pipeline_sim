@@ -31,13 +31,16 @@ It's your work to complete the pipeline simulator.
 
 ### 3. TODO
 
+Directory "testcases" gives some example programs for testing, and "pipeline_sim_ref" gives the sample program as a reference. Your implementation should behave the same as this sample program.
 
 
 ### 4. Assumptions
 
-1. Compare (cmp) and the following Branch (bge and bne) are considered to be one instruction, like "cmp reg1, reg2 bge/bne label"
-2. Pseudo Memory is of size 5000 bytes, the label is assigned memory according to the .data section.
-3. Input instruction is taken from input.txt while latency is taken from latency.txt.
+1. Compare (cmp) and the following Branch (bge or bne) are considered to be one instruction, like "cmp reg1, reg2 bge label".
+2. There are 16 registers: general purpose registers (r0 - r13), stack pointer (sp), link register (lr), and program counter (pc).
+3. Total memory space is 6000 bytes. Top address [5001, 6000] is preserved. Stack decreases from 5000, while heap increases from 0.
+4. PC starts from 0x0. Memory allocation is defined using ".space" followed by the allocated size (bytes). 
+5. Input instruction is taken from instruction.txt while latency is taken from latency.txt.
 
 ### 5. Instruction Set
 
@@ -70,4 +73,5 @@ It's your work to complete the pipeline simulator.
 27. Exit
 
 ### 6. Submission
+
 

@@ -3,7 +3,7 @@
 
 /**
  * For simplicity, we only use the 16 registers in ARM 32.
- * Memory is 6000 bytes, of which 1000 bytes are reserved.
+ * Memory is 6000 bytes, and top 1000 bytes are preserved.
  * Stack pointer (reg[ARM_REG_SP]) is initialized to 5000.
 */
 int reg[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5000, 0, 0};
