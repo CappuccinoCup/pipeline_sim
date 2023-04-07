@@ -10,18 +10,18 @@
 using namespace std;
 
 struct IF_ID {
-    Instruction recent_instr;
     int prog_cnt;
+    Instruction recent_instr;
 };
 
 struct ID_EX {
-    int src;
+    int dest;
     int r1;
     int r2;
     int address;
     int offset;
+
     int prog_cnt;
-    // Instruction
     ARM_OPC opcode = OPC_INVALID;
     ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
@@ -29,19 +29,19 @@ struct ID_EX {
 struct EX_MEM {
     int val_arith;
     int val_address;
-    int src;
+    int dest;
     bool zero;
+
     int prog_cnt;
-    // Instruction
     ARM_OPC opcode = OPC_INVALID;
     ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
 
 struct MEM_WB {
-    int write_data;
-    int src;
+    int val_data;
+    int dest;
+
     int prog_cnt;
-    // Instruction
     ARM_OPC opcode = OPC_INVALID;
     ARM_INSTR_TYPE type = INSTR_TYPE_INVALID;
 };
