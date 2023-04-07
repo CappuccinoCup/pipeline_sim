@@ -131,7 +131,7 @@ void ID() {
         }
         if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
             && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_LDR) {
+            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
             hazard = true;
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
             Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
