@@ -1,6 +1,9 @@
 .idea
 cmake-build-debug
 CMakeLists.txt
+
 .vscode
+
+pipeline_sim
 *.exe
 result.txt
