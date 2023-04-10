@@ -12,9 +12,10 @@ int mem[4000 / sizeof(int)];
 vector<Instruction> instructions;
 vector<int> latencies(12, 0);
 
-int PC_src = 0;
-int shut_down = 0;
-int file_end = 0;
+bool load_use_hazard = false;
+bool control_hazard = false;
+bool shut_down = false;
+bool file_end = false;
 
 ofstream fout;
 
@@ -26,56 +27,50 @@ ID_EX Register_ID_EX;
 EX_MEM Register_EX_MEM;
 MEM_WB Register_MEM_WB;
 
-void flush() {
-    reg[ARM_REG_PC] = Register_EX_MEM.val_address * 4;
-    Register_IF_ID.recent_instr.opcode = OPC_INVALID;
-    Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
-    Register_ID_EX.opcode = OPC_INVALID;
-    Register_ID_EX.type = INSTR_TYPE_INVALID;
-    Register_EX_MEM.opcode = OPC_INVALID;
-    Register_EX_MEM.type = INSTR_TYPE_INVALID;
-}
-
 /**
  * Fetch
 */
 void IF() {
-    if (PC_src == 0) {
+    if (control_hazard) {
+        fout << ARM_OPC_NAME[BUBBLE] << endl;
+        return;
+    }
+
+    if (!load_use_hazard) {
         if ((reg[ARM_REG_PC] / 4) >= instructions.size()) {
+            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
             Instruction end_file;
             end_file.opcode = END_OF_FILE;
             Register_IF_ID.recent_instr = end_file;
-            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
         } else {
-            Register_IF_ID.recent_instr = instructions[reg[ARM_REG_PC] / 4];
             Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
-            fout << ARM_OPC_NAME[instructions[reg[ARM_REG_PC] / 4].opcode] << endl;
+            Register_IF_ID.recent_instr = instructions[reg[ARM_REG_PC] / 4];
             reg[ARM_REG_PC] += 4;
         }
-    } else {
-        flush();
-        PC_src = 0;
     }
+
+    fout << ARM_OPC_NAME[Register_IF_ID.recent_instr.opcode] << endl;
 }
 
 /**
  * Decode
 */
 void ID() {
-    /* Stall one cycle for load-use data hazard */
-    if ((Register_IF_ID.recent_instr.operand1 == Register_ID_EX.dest
-         || Register_IF_ID.recent_instr.operand2 == Register_ID_EX.dest)
-        && Register_ID_EX.opcode == OPC_LDR) {
-        Register_ID_EX.opcode = BUBBLE;
-        Register_ID_EX.dest = -1;
-        reg[ARM_REG_PC] -= 4;
-        fout << ARM_OPC_NAME[Register_ID_EX.opcode] << endl;
+    if (control_hazard) {
+        fout << ARM_OPC_NAME[BUBBLE] << endl;
         return;
     }
 
-    Register_ID_EX.prog_cnt = Register_IF_ID.prog_cnt;
+    /* Detect load-use data hazard */
+    if ((Register_IF_ID.recent_instr.operand1 == Register_ID_EX.dest
+         || Register_IF_ID.recent_instr.operand2 == Register_ID_EX.dest)
+        && Register_ID_EX.opcode == OPC_LDR) {
+        load_use_hazard = true;
+        fout << ARM_OPC_NAME[BUBBLE] << endl;
+        return;
+    }
 
-    /* Using EX/MEM forward to deal with data hazard */
+    /* Forwarding */
     if (Register_IF_ID.recent_instr.opcode > OPC_INVALID && Register_IF_ID.recent_instr.opcode <= OPC_MUL) {
         Register_ID_EX.dest = Register_IF_ID.recent_instr.dest;
         bool hazard_r1 = false;
@@ -267,6 +262,7 @@ void ID() {
         Register_ID_EX.address = Register_IF_ID.recent_instr.dest;
     }
 
+    Register_ID_EX.prog_cnt = Register_IF_ID.prog_cnt;
     Register_ID_EX.opcode = Register_IF_ID.recent_instr.opcode;
     Register_ID_EX.type = Register_IF_ID.recent_instr.type;
     fout << ARM_OPC_NAME[Register_ID_EX.opcode] << endl;
@@ -276,7 +272,10 @@ void ID() {
  * Execute
 */
 void EX() {
-    Register_EX_MEM.prog_cnt = Register_ID_EX.prog_cnt;
+    if (control_hazard) {
+        fout << ARM_OPC_NAME[BUBBLE] << endl;
+        return;
+    }
 
     if (Register_ID_EX.opcode > OPC_INVALID && Register_ID_EX.opcode <= OPC_CMPBGE) {
         Register_EX_MEM.dest = Register_ID_EX.dest;
@@ -322,6 +321,7 @@ void EX() {
         Register_EX_MEM.zero = true;
     }
 
+    Register_EX_MEM.prog_cnt = Register_ID_EX.prog_cnt;
     Register_EX_MEM.opcode = Register_ID_EX.opcode;
     Register_EX_MEM.type = Register_ID_EX.type;
     fout << ARM_OPC_NAME[Register_EX_MEM.opcode] << endl;
@@ -331,8 +331,6 @@ void EX() {
  * Memory
 */
 void MEM() {
-    Register_MEM_WB.prog_cnt = Register_EX_MEM.prog_cnt;
-
     if (Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
         Register_MEM_WB.val_data = Register_EX_MEM.val_arith;
         Register_MEM_WB.dest = Register_EX_MEM.dest;
@@ -356,45 +354,62 @@ void MEM() {
              << Register_EX_MEM.dest << endl;
     }
 
+    /* Detect control hazard */
     if (Register_EX_MEM.opcode == OPC_MOV && Register_EX_MEM.type == INSTR_TYPE_EXTRA) {
         Register_EX_MEM.val_address = Register_EX_MEM.val_arith;
-        PC_src = 1;
+        control_hazard = true;
     }
-
     if (Register_EX_MEM.opcode >= OPC_CMPBNE && Register_EX_MEM.opcode <= OPC_CMPBGE && Register_EX_MEM.zero == 0) {
-        PC_src = 1;
+        control_hazard = true;
     }
-
     if (Register_EX_MEM.opcode == OPC_BL) {
         reg[ARM_REG_LR] = (Register_EX_MEM.prog_cnt + 1) * 4;
-        PC_src = 1;
+        control_hazard = true;
     }
-
     if (Register_EX_MEM.opcode == OPC_B) {
-        PC_src = 1;
+        control_hazard = true;
     }
 
+    Register_MEM_WB.prog_cnt = Register_EX_MEM.prog_cnt;
     Register_MEM_WB.opcode = Register_EX_MEM.opcode;
     Register_MEM_WB.type = Register_EX_MEM.type;
     fout << ARM_OPC_NAME[Register_EX_MEM.opcode] << endl;
 }
 
 /**
- * Writeback
+ * Write Back
 */
 void WB() {
     if (Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
         reg[Register_MEM_WB.dest] = Register_MEM_WB.val_data;
     } else if (Register_MEM_WB.opcode == OPC_EXIT) {
-        shut_down = 1;
+        shut_down = true;
     } else if (Register_MEM_WB.opcode == END_OF_FILE) {
-        file_end = 1;
+        file_end = true;
     }
     fout << ARM_OPC_NAME[Register_MEM_WB.opcode] << endl;
 }
 
 // ====================== PIPELINE STAGES ======================
 
+
+void deal_with_hazards() {
+    if (load_use_hazard) {
+        Register_ID_EX.opcode = BUBBLE;
+        Register_ID_EX.type = INSTR_TYPE_INVALID;
+        load_use_hazard = false;
+    }
+    if (control_hazard) {
+        reg[ARM_REG_PC] = Register_EX_MEM.val_address * 4;
+        Register_IF_ID.recent_instr.opcode = BUBBLE;
+        Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
+        Register_ID_EX.opcode = BUBBLE;
+        Register_ID_EX.type = INSTR_TYPE_INVALID;
+        Register_EX_MEM.opcode = BUBBLE;
+        Register_EX_MEM.type = INSTR_TYPE_INVALID;
+        control_hazard = false;
+    }
+}
 
 void print_register() {
     for (int i = 0; i < 4; i++) {
@@ -461,28 +476,13 @@ int main() {
             instr_num++;
         }
 
-        fout << "======= WB =======" << endl;
-        WB();
+        fout << "======= WB =======" << endl;   WB();
+        fout << "======= MEM ======" << endl;   MEM();
+        fout << "======= EX =======" << endl;   EX();
+        fout << "======= ID =======" << endl;   ID();
+        fout << "======= IF =======" << endl;   IF();
 
-        fout << "======= MEM ======" << endl;
-        MEM();
-
-        if (PC_src == 0) {
-            fout << "======= EX =======" << endl;
-            EX();
-
-            fout << "======= ID =======" << endl;
-            ID();
-        } else {
-            fout << "======= EX =======" << endl;
-            fout << "flush" << endl;
-
-            fout << "======= ID =======" << endl;
-            fout << "flush" << endl;
-        }
-
-        fout << "======= IF =======" << endl;
-        IF();
+        deal_with_hazards();
 
         fout << endl;
         print_register();

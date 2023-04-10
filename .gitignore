@@ -7,3 +7,4 @@ CMakeLists.txt
 pipeline_sim
 *.exe
 result.txt
+result_ref.txt
