@@ -128,7 +128,7 @@ CPI: 3.2
 |
 ```
 
-### 7. Instruction Set
+### 7. Supported Instructions
 
 1. add rd, reg1, reg2
 2. add rd, reg1, #imm
