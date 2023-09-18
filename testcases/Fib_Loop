@@ -1,0 +1,15 @@
+main:
+0x000:  mov r0, #1
+0x004:  mov r1, #1
+0x008:  mov r10, #0
+l1:
+0x00c:  cmp r10, #10
+        bge l2
+fib:
+0x010:  mov r9, r1
+0x014:  mov r1, r0
+0x018:  add r0, r0, r9
+0x01c:  add r10, r10, #1
+0x020:  b   l1
+l2:
+0x024:  Exit
