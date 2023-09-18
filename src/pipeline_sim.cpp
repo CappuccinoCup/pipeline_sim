@@ -31,24 +31,23 @@ MEM_WB Register_MEM_WB;
  * Fetch
 */
 void IF() {
-    if (control_hazard) {
-        fout << ARM_OPC_NAME[BUBBLE] << endl;
-        return;
-    }
 
-    if (!load_use_hazard) {
-        if ((reg[ARM_REG_PC] / 4) >= instructions.size()) {
-            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
-            Instruction end_file;
-            end_file.opcode = END_OF_FILE;
-            Register_IF_ID.recent_instr = end_file;
-        } else {
-            Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
-            Register_IF_ID.recent_instr = instructions[reg[ARM_REG_PC] / 4];
-            reg[ARM_REG_PC] += 4;
-        }
-    }
+    /*************************************/
+    /* TODO: Fix and complete IF stage.  */
+    /* Hint: if hazards happen, you may  */
+    /*  need to change some operations.  */
+    /*************************************/
 
+    if ((reg[ARM_REG_PC] / 4) >= instructions.size()) {
+        Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
+        Instruction end_file;
+        end_file.opcode = END_OF_FILE;
+        Register_IF_ID.recent_instr = end_file;
+    } else {
+        Register_IF_ID.prog_cnt = reg[ARM_REG_PC] / 4;
+        Register_IF_ID.recent_instr = instructions[reg[ARM_REG_PC] / 4];
+        reg[ARM_REG_PC] += 4;
+    }
     fout << ARM_OPC_NAME[Register_IF_ID.recent_instr.opcode] << endl;
 }
 
@@ -56,209 +55,13 @@ void IF() {
  * Decode
 */
 void ID() {
-    if (control_hazard) {
-        fout << ARM_OPC_NAME[BUBBLE] << endl;
-        return;
-    }
 
-    /* Detect load-use data hazard */
-    if ((Register_IF_ID.recent_instr.operand1 == Register_ID_EX.dest
-         || Register_IF_ID.recent_instr.operand2 == Register_ID_EX.dest)
-        && Register_ID_EX.opcode == OPC_LDR) {
-        load_use_hazard = true;
-        fout << ARM_OPC_NAME[BUBBLE] << endl;
-        return;
-    }
-
-    /* Forwarding */
-    if (Register_IF_ID.recent_instr.opcode > OPC_INVALID && Register_IF_ID.recent_instr.opcode <= OPC_MUL) {
-        Register_ID_EX.dest = Register_IF_ID.recent_instr.dest;
-        bool hazard_r1 = false;
-        bool hazard_r2 = false;
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.dest
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard_r1 = true;
-            Register_ID_EX.r1 = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard_r2 = true;
-            Register_ID_EX.r2 = Register_MEM_WB.val_data;
-        }
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard_r1 = true;
-            Register_ID_EX.r1 = Register_EX_MEM.val_arith;
-        }
-        if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard_r2 = true;
-            Register_ID_EX.r2 = Register_EX_MEM.val_arith;
-        }
-
-        if (!hazard_r1) {
-            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
-        }
-        if (!hazard_r2) {
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG) {
-                Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
-            }
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
-                Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
-            }
-        }
-    }
-
-    if (Register_IF_ID.recent_instr.opcode == OPC_MOV) {
-        Register_ID_EX.dest = Register_IF_ID.recent_instr.dest;
-        bool hazard = false;
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard = true;
-            Register_ID_EX.r1 = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard = true;
-            Register_ID_EX.r1 = Register_EX_MEM.val_arith;
-        }
-
-        if (!hazard) {
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG) {
-                Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
-            }
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
-                Register_ID_EX.r1 = Register_IF_ID.recent_instr.operand1;
-            }
-        }
-
-        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_EXTRA) {
-            // mov pc, lr
-            if (Register_MEM_WB.dest == ARM_REG_LR) {
-                Register_ID_EX.r1 = Register_MEM_WB.val_data;
-            } else if (Register_EX_MEM.dest == ARM_REG_LR) {
-                Register_ID_EX.r1 = Register_EX_MEM.val_arith;
-            } else {
-                Register_ID_EX.r1 = reg[ARM_REG_LR] / 4;
-            }
-        }
-    }
-
-    if (Register_IF_ID.recent_instr.opcode == OPC_LDR) {
-        Register_ID_EX.dest = Register_IF_ID.recent_instr.dest;
-        bool hazard = false;
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.dest
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard = true;
-            Register_ID_EX.address = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard = true;
-            Register_ID_EX.address = Register_EX_MEM.val_arith;
-        }
-
-        if (!hazard) {
-            Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
-        }
-
-        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
-            Register_ID_EX.offset = Register_IF_ID.recent_instr.operand2;
-        }
-        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_EXTRA) {
-            Register_ID_EX.address = Register_IF_ID.recent_instr.operand1;
-        }
-    }
-
-    if (Register_IF_ID.recent_instr.opcode == OPC_STR) {
-        Register_ID_EX.dest = reg[Register_IF_ID.recent_instr.dest];
-        bool hazard = false;
-
-        if (Register_IF_ID.recent_instr.dest == Register_MEM_WB.dest
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard = true;
-            Register_ID_EX.dest = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.dest == Register_EX_MEM.dest
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard = true;
-            Register_ID_EX.dest = Register_EX_MEM.val_arith;
-        }
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.dest
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard = true;
-            Register_ID_EX.address = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard = true;
-            Register_ID_EX.address = Register_EX_MEM.val_arith;
-        }
-
-        if (!hazard) {
-            Register_ID_EX.address = reg[Register_IF_ID.recent_instr.operand1];
-        }
-
-        if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
-            Register_ID_EX.offset = Register_IF_ID.recent_instr.operand2;
-        }
-    }
-
-    if (Register_IF_ID.recent_instr.opcode >= OPC_CMPBNE && Register_IF_ID.recent_instr.opcode <= OPC_CMPBGE) {
-        bool hazard_r1 = false;
-        bool hazard_r2 = false;
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_MEM_WB.dest
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard_r1 = true;
-            Register_ID_EX.r1 = Register_MEM_WB.val_data;
-        }
-        if (Register_IF_ID.recent_instr.operand2 == Register_MEM_WB.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-            hazard_r2 = true;
-            Register_ID_EX.r2 = Register_MEM_WB.val_data;
-        }
-
-        if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard_r1 = true;
-            Register_ID_EX.r1 = Register_EX_MEM.val_arith;
-        }
-        if (Register_IF_ID.recent_instr.operand2 == Register_EX_MEM.dest
-            && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
-            && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-            hazard_r2 = true;
-            Register_ID_EX.r2 = Register_EX_MEM.val_arith;
-        }
-
-        if (!hazard_r1) {
-            Register_ID_EX.r1 = reg[Register_IF_ID.recent_instr.operand1];
-        }
-        if (!hazard_r2) {
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_REG) {
-                Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
-            }
-            if (Register_IF_ID.recent_instr.type == INSTR_TYPE_IMM) {
-                Register_ID_EX.r2 = Register_IF_ID.recent_instr.operand2;
-            }
-        }
-
-        Register_ID_EX.address = Register_IF_ID.recent_instr.dest;
-    }
-
-    if (Register_IF_ID.recent_instr.opcode >= OPC_BL && Register_IF_ID.recent_instr.opcode <= OPC_B) {
-        Register_ID_EX.address = Register_IF_ID.recent_instr.dest;
-    }
+    /*************************************/
+    /* TODO: Fix and complete ID stage.  */
+    /* Note: you are expected to detect  */
+    /*  load-use data hazard and support */
+    /*  forwarding in this stage.        */
+    /*************************************/
 
     Register_ID_EX.prog_cnt = Register_IF_ID.prog_cnt;
     Register_ID_EX.opcode = Register_IF_ID.recent_instr.opcode;
@@ -270,54 +73,11 @@ void ID() {
  * Execute
 */
 void EX() {
-    if (control_hazard) {
-        fout << ARM_OPC_NAME[BUBBLE] << endl;
-        return;
-    }
 
-    if (Register_ID_EX.opcode > OPC_INVALID && Register_ID_EX.opcode <= OPC_CMPBGE) {
-        Register_EX_MEM.dest = Register_ID_EX.dest;
-
-        if (Register_ID_EX.opcode >= OPC_ADD && Register_ID_EX.opcode <= OPC_MOV) {
-            switch (Register_ID_EX.opcode) {
-                case OPC_ADD:
-                    Register_EX_MEM.val_arith = Register_ID_EX.r1 + Register_ID_EX.r2;
-                    break;
-                case OPC_SUB:
-                    Register_EX_MEM.val_arith = Register_ID_EX.r1 - Register_ID_EX.r2;
-                    break;
-                case OPC_MUL:
-                    Register_EX_MEM.val_arith = Register_ID_EX.r1 * Register_ID_EX.r2;
-                    break;
-                case OPC_MOV:
-                    Register_EX_MEM.val_arith = Register_ID_EX.r1;
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (Register_ID_EX.opcode >= OPC_LDR && Register_ID_EX.opcode <= OPC_STR) {
-            if (Register_ID_EX.type == INSTR_TYPE_IMM) {
-                Register_EX_MEM.val_address = Register_ID_EX.address + Register_ID_EX.offset;
-            } else {
-                Register_EX_MEM.val_address = Register_ID_EX.address;
-            }
-        }
-        if (Register_ID_EX.opcode >= OPC_CMPBNE && Register_ID_EX.opcode <= OPC_CMPBGE) {
-            if (Register_ID_EX.opcode == OPC_CMPBNE) {
-                Register_EX_MEM.zero = (Register_ID_EX.r1 == Register_ID_EX.r2);
-            }
-            if (Register_ID_EX.opcode == OPC_CMPBGE) {
-                Register_EX_MEM.zero = Register_ID_EX.r1 < Register_ID_EX.r2;
-            }
-            Register_EX_MEM.val_address = Register_ID_EX.address;
-        }
-    }
-
-    if (Register_ID_EX.opcode >= OPC_BL && Register_ID_EX.opcode <= OPC_B) {
-        Register_EX_MEM.val_address = Register_ID_EX.address;
-        Register_EX_MEM.zero = true;
-    }
+    /*************************************/
+    /* TODO: Fix and complete EX stage.  */
+    /* Hint: finish computing.           */
+    /*************************************/
 
     Register_EX_MEM.prog_cnt = Register_ID_EX.prog_cnt;
     Register_EX_MEM.opcode = Register_ID_EX.opcode;
@@ -329,44 +89,12 @@ void EX() {
  * Memory
 */
 void MEM() {
-    if (Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
-        Register_MEM_WB.val_data = Register_EX_MEM.val_arith;
-        Register_MEM_WB.dest = Register_EX_MEM.dest;
-    }
 
-    if (Register_EX_MEM.opcode == OPC_LDR) {
-        if (Register_EX_MEM.type != INSTR_TYPE_EXTRA) {
-            Register_MEM_WB.val_data = mem[(Register_EX_MEM.val_address) / 4];
-            fout << "mem[" << Register_EX_MEM.val_address << "] = "
-                 << mem[(Register_EX_MEM.val_address) / 4] << endl;
-            Register_MEM_WB.dest = Register_EX_MEM.dest;
-        } else {
-            Register_MEM_WB.val_data = (Register_EX_MEM.val_address);
-            Register_MEM_WB.dest = Register_EX_MEM.dest;
-        }
-    }
-
-    if (Register_EX_MEM.opcode == OPC_STR) {
-        mem[(Register_EX_MEM.val_address) / 4] = Register_EX_MEM.dest;
-        fout << "mem[" << Register_EX_MEM.val_address << "] = "
-             << Register_EX_MEM.dest << endl;
-    }
-
-    /* Detect control hazard */
-    if (Register_EX_MEM.opcode == OPC_MOV && Register_EX_MEM.type == INSTR_TYPE_EXTRA) {
-        Register_EX_MEM.val_address = Register_EX_MEM.val_arith;
-        control_hazard = true;
-    }
-    if (Register_EX_MEM.opcode >= OPC_CMPBNE && Register_EX_MEM.opcode <= OPC_CMPBGE && Register_EX_MEM.zero == 0) {
-        control_hazard = true;
-    }
-    if (Register_EX_MEM.opcode == OPC_BL) {
-        reg[ARM_REG_LR] = (Register_EX_MEM.prog_cnt + 1) * 4;
-        control_hazard = true;
-    }
-    if (Register_EX_MEM.opcode == OPC_B) {
-        control_hazard = true;
-    }
+    /*************************************/
+    /* TODO: Fix and complete MEM stage. */
+    /* Note: you are expected to detect  */
+    /*  control hazards in this stage.   */
+    /*************************************/
 
     Register_MEM_WB.prog_cnt = Register_EX_MEM.prog_cnt;
     Register_MEM_WB.opcode = Register_EX_MEM.opcode;
@@ -378,11 +106,13 @@ void MEM() {
  * Write Back
 */
 void WB() {
-    if (Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-        if (Register_MEM_WB.dest >= 0) {
-            reg[Register_MEM_WB.dest] = Register_MEM_WB.val_data;
-        }
-    } else if (Register_MEM_WB.opcode == OPC_EXIT) {
+
+    /*************************************/
+    /* TODO: Fix and complete WB stage.  */
+    /* Hint: update the register state.  */
+    /*************************************/
+
+    if (Register_MEM_WB.opcode == OPC_EXIT) {
         shut_down = true;
     } else if (Register_MEM_WB.opcode == END_OF_FILE) {
         file_end = true;
@@ -395,18 +125,21 @@ void WB() {
 
 void deal_with_hazards() {
     if (load_use_hazard) {
-        Register_ID_EX.opcode = BUBBLE;
-        Register_ID_EX.type = INSTR_TYPE_INVALID;
+
+        /*******************************************************************/
+        /* TODO: additional operations to deal with load-use data hazards. */
+        /* Hint: inserting a bubble between load and use.                  */
+        /*******************************************************************/
+
         load_use_hazard = false;
     }
     if (control_hazard) {
-        reg[ARM_REG_PC] = Register_EX_MEM.val_address * 4;
-        Register_IF_ID.recent_instr.opcode = BUBBLE;
-        Register_IF_ID.recent_instr.type = INSTR_TYPE_INVALID;
-        Register_ID_EX.opcode = BUBBLE;
-        Register_ID_EX.type = INSTR_TYPE_INVALID;
-        Register_EX_MEM.opcode = BUBBLE;
-        Register_EX_MEM.type = INSTR_TYPE_INVALID;
+
+        /*******************************************************************/
+        /* TODO: additional operations to deal with control hazards.       */
+        /* Hint: roll back IF & ID & EX stages; reset PC to correct value. */
+        /*******************************************************************/
+
         control_hazard = false;
     }
 }
