@@ -2,7 +2,7 @@
 #define PIPELINE_SIM_H
 
 #include <iostream>
-#include <bits/stdc++.h>
+#include <fstream>
 #include <string>
 
 #include "arm_instr.h"

@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #include <iostream>
-#include <bits/stdc++.h>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
