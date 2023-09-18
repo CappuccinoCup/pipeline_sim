@@ -122,14 +122,12 @@ void ID() {
             && Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
             hazard = true;
             Register_ID_EX.r1 = Register_MEM_WB.val_data;
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
         }
         if (Register_IF_ID.recent_instr.operand1 == Register_EX_MEM.dest
             && Register_IF_ID.recent_instr.type == INSTR_TYPE_REG
             && Register_EX_MEM.opcode > OPC_INVALID && Register_EX_MEM.opcode <= OPC_MOV) {
             hazard = true;
             Register_ID_EX.r1 = Register_EX_MEM.val_arith;
-            Register_ID_EX.r2 = reg[Register_IF_ID.recent_instr.operand2];
         }
 
         if (!hazard) {
@@ -381,7 +379,9 @@ void MEM() {
 */
 void WB() {
     if (Register_MEM_WB.opcode > OPC_INVALID && Register_MEM_WB.opcode <= OPC_LDR) {
-        reg[Register_MEM_WB.dest] = Register_MEM_WB.val_data;
+        if (Register_MEM_WB.dest >= 0) {
+            reg[Register_MEM_WB.dest] = Register_MEM_WB.val_data;
+        }
     } else if (Register_MEM_WB.opcode == OPC_EXIT) {
         shut_down = true;
     } else if (Register_MEM_WB.opcode == END_OF_FILE) {
